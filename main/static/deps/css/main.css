@@ -1,0 +1,132 @@
+/* === Binify Custom Styles === */
+
+body {
+  background: #181c20;
+  color: #f5f6fa;
+  min-height: 100vh;
+  font-family: 'Segoe UI', 'Arial', sans-serif;
+}
+
+.navbar {
+  background: #23272b !important;
+  border-bottom: 1px solid #222;
+}
+
+.navbar-brand {
+  font-weight: bold;
+  letter-spacing: 1px;
+  color: #43e97b !important;
+}
+
+.card.bg-dark {
+  background: #23272b !important;
+  border: none;
+}
+
+.card-title a {
+  color: #43e97b;
+  text-decoration: none;
+}
+
+.card-title a:hover {
+  text-decoration: underline;
+}
+
+.code-block {
+  background: #23272b;
+  border-radius: 8px;
+  padding: 16px;
+  font-size: 1.1rem;
+  overflow-x: auto;
+}
+
+.btn-outline-success,
+.btn-outline-primary,
+.btn-outline-info,
+.btn-outline-warning,
+.btn-outline-danger,
+.btn-outline-light {
+  border-width: 2px;
+}
+
+.btn-outline-success:hover {
+  background: #43e97b;
+  color: #181c20;
+  border-color: #43e97b;
+}
+
+.btn-outline-light:hover,
+.btn-outline-info:hover,
+.btn-outline-primary:hover,
+.btn-outline-warning:hover,
+.btn-outline-danger:hover {
+  filter: brightness(1.2);
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+body {
+  flex: 1 0 auto;
+}
+
+.container {
+  flex: 1 0 auto;
+}
+
+.footer {
+  flex-shrink: 0;
+  width: 100%;
+  text-align: center;
+  color: #bbb;
+  padding: 16px 0;
+  border-top: 1px solid #23272b;
+  background: #181c20;
+  margin-top: 0; /* обовʼязково! */
+}
+
+@media (max-width: 767px) {
+  .navbar .container {
+    flex-direction: column;
+  }
+
+  .card {
+    margin-bottom: 1rem;
+  }
+
+  .code-block {
+    font-size: 1rem;
+    padding: 10px;
+  }
+}
+
+.btn-logo {
+  background: #23272b;/* темний фон, як полігон */
+  color: #43e97b;/* зелений текст, як у лого */
+  border: 2px solid #43e97b;/* зелена обводка */
+  border-radius: 16px;/* помітно закруглені краї */
+  font-family: 'Segoe UI', Arial, sans-serif;
+  font-weight: bold;
+  font-size: 0.9em;
+  letter-spacing: 0.5px;
+  padding: 0.5em 1.5em;
+  transition:
+    background 0.2s,
+    color 0.2s,
+    box-shadow 0.2s;
+  box-shadow: 0 2px 8px rgba(67, 233, 123, 0.08);
+}
+
+.btn-logo:hover,
+.btn-logo:focus {
+  background: #43e97b;/* зелений фон при наведенні */
+  color: #23272b;/* темний текст */
+  text-decoration: none;
+  border-color: #43e97b;
+}

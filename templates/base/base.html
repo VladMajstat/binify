@@ -1,0 +1,63 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="{% static 'deps/css/bootstrap/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'deps/css/bootstrap/github-dark.min.css' %}">
+    <!-- favicon -->
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'deps/favicon/apple-touch-icon.png' %}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'deps/favicon/favicon-32x32.png' %}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'deps/favicon/favicon-16x16.png' %}">
+    <link rel="manifest" href="{% static 'deps/favicon/site.webmanifest' %}">
+    <link rel="stylesheet" href="{% static 'deps/css/footer.css' %}">
+    <title>{% block title %}Binify{% endblock %}</title>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{ url 'main' }" style="display:flex; align-items:center; gap:8px;">
+                <!-- logo -->
+                <svg width="200" height="60" viewBox="0 0 80 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <polygon points="12,4 20,8 20,16 12,20 4,16 4,8" fill="#23272b" stroke="#43e97b" stroke-width="1"/>
+                    <text x="8" y="16" font-size="7" fill="#43e97b" font-family="Consolas, monospace" font-weight="bold" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" transform="translate(4,-3)">bin</text>
+                    <text x="28" y="17" font-size="14" fill="#43e97b" font-family="Segoe UI, Arial, sans-serif" font-weight="bold">Binify</text>
+                </svg>
+            </a>
+            <div>
+                <link rel="stylesheet" href="{% static 'deps/css/main.css' %}">
+                <a class="btn btn-logo me-2" href="{ url 'main' }">Головна</a>
+                <a class="btn btn-logo me-2" href="{ url 'create_bin' }">Створити Bin</a>
+                <a class="btn btn-logo me-2" href="{ url 'about' }">Про сайт</a>
+                {% comment %} {% if user.is_authenticated %}
+                    <a class="btn btn-logo me-2" href="{ url 'profile' }">Профіль</a>
+                    <a class="btn btn-logo me-2" href="{ url 'logout' }">Вийти</a>
+                {% else %}
+                    <a class="btn btn-logo me-2" href="{ url 'login' }">Увійти</a>
+                {% endif %} {% endcomment %}
+            </div>
+        </div>
+    </nav>
+    <div class="container mt-4">
+        {% block content %}{% endblock %}
+    </div>
+    <div class="footer">
+        <svg width="160" height="48" viewBox="0 0 160 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="24,8 40,16 40,32 24,40 8,32 8,16" fill="#23272b" stroke="#43e97b" stroke-width="2"/>
+            <text x="15" y="28" font-size="16" fill="#43e97b" font-family="Consolas, monospace" font-weight="bold" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" transform="translate(9,-3)">bin</text>
+            <text x="50" y="34" font-size="28" fill="#43e97b" font-family="Segoe UI, Arial, sans-serif" font-weight="bold">Binify</text>
+        </svg>
+        Binify © {{ year|default:"2025" }} | Inspired by Basedir
+    </div>
+    {% block extra_js %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    {% endblock %}
+</body>
+</html>

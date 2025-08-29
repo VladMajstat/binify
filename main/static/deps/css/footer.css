@@ -1,0 +1,43 @@
+html,
+body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: #181c20;
+    color: #f5f6fa;
+}
+
+.navbar {
+    background: #23272b;
+}
+
+.navbar-brand {
+    font-weight: bold;
+}
+
+.code-block {
+    background: #23272b;
+    border-radius: 8px;
+    padding: 16px;
+}
+
+.container {
+    flex: 1 0 auto;
+}
+
+.footer {
+    flex-shrink: 0;
+    width: 100%;
+    text-align: center;
+    color: #bbb;
+    padding: 16px 0;
+    border-top: 1px solid #23272b;
+    background: #181c20;
+    margin-top: 0;
+}

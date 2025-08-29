@@ -1,0 +1,30 @@
+{% extends "base/base.html" %}
+{% block title %}Binify — Головна{% endblock %}
+{% block content %}
+<div class="text-center mb-4">
+    <h1>Binify</h1>
+    <p class="lead">Легко зберігай та ділись фрагментами коду або тексту.</p>
+    <a href="{ url 'create_bin' }" class="btn btn-success btn-lg">Створити новий Bin</a>
+</div>
+<h3>Останні біни</h3>
+<div class="row">
+    {% for bin in bins %}
+        <div class="col-md-6 col-lg-4 mb-3">
+            <div class="card bg-dark text-light h-100">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <a href="{ url 'view_bin' bin.slug }" class="link-light">{{ bin.title|default:"Без назви" }}</a>
+                    </h5>
+                    <p class="card-text small">
+                        {{ bin.get_language_display }}<br>
+                        Автор: {{ bin.author.username|default:"Гість" }}<br>
+                        {{ bin.created_at|date:"d.m.Y H:i" }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <p>Немає жодного біна. Будь першим!</p>
+    {% endfor %}
+</div>
+{% endblock %}

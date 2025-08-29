@@ -1,0 +1,25 @@
+{% extends "base/base.html" %}
+{% block title %}Створити Bin — Binify{% endblock %}
+{% block content %}
+<h2>Створити новий Bin</h2>
+<form method="post" class="mt-4">
+    {% csrf_token %}
+    <div class="mb-3">
+        <label for="id_title" class="form-label">Назва (необов'язково):</label>
+        <input type="text" class="form-control" id="id_title" name="title" placeholder="Мій код" maxlength="100">
+    </div>
+    <div class="mb-3">
+        <label for="id_language" class="form-label">Мова:</label>
+        <select class="form-select" id="id_language" name="language">
+            {% for lang in languages %}
+                <option value="{{ lang.0 }}">{{ lang.1 }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="mb-3">
+        <label for="id_content" class="form-label">Текст / Код:</label>
+        <textarea class="form-control" id="id_content" name="content" rows="10" required></textarea>
+    </div>
+    <button type="submit" class="btn btn-success">Зберегти</button>
+</form>
+{% endblock %}
