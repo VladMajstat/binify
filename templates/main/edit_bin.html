@@ -1,0 +1,12 @@
+{% extends 'base/base.html' %}
+{% block content %}
+<div class="container mt-5">
+    <h1>Редактировать Bin</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-success">Сохранить изменения</button>
+        <a href="{% url 'main' %}" class="btn btn-secondary">Отмена</a>
+    </form>
+</div>
+{% endblock %}

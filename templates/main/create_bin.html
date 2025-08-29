@@ -1,0 +1,58 @@
+{% extends "base/base.html" %}
+{% block content %}
+<h2 class="mb-4 fs-4">Створити новий Bin</h2>
+<form method="post" class="mt-4">
+    {% csrf_token %}
+    <div class="mb-3">
+        <label for="id_content" class="form-label"></label>
+        <textarea class="form-control" id="id_content" name="content" rows="10" required></textarea>
+    </div>
+    <h5 class="mt-4">Додаткові налаштування</h5>
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label for="id_category" class="form-label">Категорія:</label>
+            <select class="form-select" id="id_category" name="category">
+                <option value="Код">Код</option>
+                <option value="Текст">Текст</option>
+                <option value="Заметка">Заметка</option>
+            </select>
+        </div>
+        <div class="col-md-6 mb-3">
+            <label for="id_tags" class="form-label">Теги:</label>
+            <input type="text" class="form-control" id="id_tags" name="tags" placeholder="Введіть теги через кому">
+        </div>
+        <div class="col-md-6 mb-3">
+            <label for="id_language" class="form-label">Мова:</label>
+            <select class="form-select" id="id_language" name="language">
+                <option value="Python">Python</option>
+                <option value="JavaScript">JavaScript</option>
+                <option value="HTML">HTML</option>
+                <option value="CSS">CSS</option>
+                <option value="Text">Text</option>
+            </select>
+        </div>
+        <div class="col-md-6 mb-3">
+            <label for="id_expiry" class="form-label">Термін дії:</label>
+            <select class="form-select" id="id_expiry" name="expiry">
+                <option value="1 день">1 день</option>
+                <option value="7 днів">7 днів</option>
+                <option value="30 днів">30 днів</option>
+                <option value="Безстроково">Безстроково</option>
+            </select>
+        </div>
+        <div class="col-md-6 mb-3">
+            <label for="id_access" class="form-label">Доступність:</label>
+            <select class="form-select" id="id_access" name="access">
+                <option value="Публічний">Публічний</option>
+                <option value="Приватний">Приватний</option>
+                <option value="За посиланням">За посиланням</option>
+            </select>
+        </div>
+        <div class="col-md-6 mb-3">
+            <label for="id_title" class="form-label">Назва (необов'язково):</label>
+            <input type="text" class="form-control" id="id_title" name="title" placeholder="Мій код" maxlength="100">
+        </div>
+    </div>
+    <button type="submit" class="btn btn-success mt-3">Зберегти</button>
+</form>
+{% endblock %}

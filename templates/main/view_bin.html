@@ -1,0 +1,44 @@
+{% extends "base/base.html" %}
+{% block title %}Перегляд Bin — Binify{% endblock %}
+{% block extra_head %}
+{{ block.super }}
+<meta property="og:title" content="{{ bin.title|default:"Binify Bin" }}">
+<meta property="og:description" content="{{ bin.content|truncatechars:150 }}">
+<meta property="og:url" content="{{ request.build_absolute_uri }}">
+<meta name="description" content="{{ bin.content|truncatechars:150 }}">
+{% endblock %}
+{% block content %}
+<h2>{{ bin.title|default:"Без назви" }}</h2>
+<p>
+    Мова: <b>{{ bin.get_language_display }}</b>
+    <br>
+    Автор: {{ bin.author.username|default:"Гість" }}
+    <br>
+    Створено: {{ bin.created_at|date:"d.m.Y H:i" }}
+</p>
+<div class="code-block mb-3">
+    <pre><code class="language-{{ bin.language|default:'plaintext' }}">{{ bin.content|linebreaksbr|escape }}</code></pre>
+</div>
+<div class="mb-3">
+    <button class="btn btn-outline-light" id="copy-btn">Копіювати</button>
+    <button class="btn btn-outline-info" id="share-btn">Поділитись</button>
+    {% if user == bin.author %}
+        <a href="{% url 'edit_bin' bin.slug %}" class="btn btn-outline-warning">Редагувати</a>
+        <a href="{% url 'delete_bin' bin.slug %}" class="btn btn-outline-danger">Видалити</a>
+    {% endif %}
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('copy-btn').onclick = function() {
+            navigator.clipboard.writeText(`{{ bin.content|escapejs }}`);
+            this.innerText = "Скопійовано!";
+            setTimeout(() => this.innerText = "Копіювати", 1500);
+        }
+        document.getElementById('share-btn').onclick = function() {
+            navigator.clipboard.writeText(window.location.href);
+            this.innerText = "Посилання скопійовано!";
+            setTimeout(() => this.innerText = "Поділитись", 1500);
+        }
+    });
+</script>
+{% endblock %}
