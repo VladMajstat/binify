@@ -4,9 +4,9 @@
 <div class="text-center mb-4">
     <h1>Binify</h1>
     <p class="lead">{{ content }}</p>
-    <a href="{% url 'create_bin' %}" class="btn btn-success btn-lg">Створити новий Bin</a>
+    <a href="{% url 'create_bin' %}" class="btn btn-success btn-lg">{{ create_new_bin }}</a>
 </div>
-<h3>Останні біни</h3>
+<h3>{{ last_bin }}</h3>
 <div class="row">
     {% for bin in bins %}
         <div class="col-md-6 col-lg-4 mb-3">
@@ -24,7 +24,7 @@
             </div>
         </div>
     {% empty %}
-        <p>Немає жодного біна. Будь першим!</p>
+        <p>{{ 0_bins }}</p>
     {% endfor %}
 </div>
 {% endblock %}

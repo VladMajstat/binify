@@ -1,0 +1,36 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h2>Створити новий Bin</h2>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Назва</label>
+                            <input type="text" class="form-control" id="title" name="title" placeholder="Введіть назву...">
+                        </div>
+                        <div class="mb-3">
+                            <label for="content" class="form-label">Вміст</label>
+                            <textarea class="form-control" id="content" name="content" rows="10" placeholder="Вставте ваш код або текст..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-success">Зберегти Bin</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'deps/css/main.css' %}">
+<link rel="stylesheet" href="{% static 'deps/css/bootstrap/bootstrap.min.css' %}">
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'deps/js/binify.js' %}"></script>
+{% endblock %}

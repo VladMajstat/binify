@@ -1,0 +1,35 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container">
+    <a class="navbar-brand" href="{% url 'main' %}" style="display:flex; align-items:center; gap:8px;">
+      <!-- logo -->
+      <svg width="200" height="60" viewBox="0 0 80 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="12,4 20,8 20,16 12,20 4,16 4,8" fill="#23272b" stroke="#43e97b" stroke-width="1"/>
+        <text x="8" y="16" font-size="7" fill="#43e97b" font-family="Consolas, monospace" font-weight="bold" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" transform="translate(4,-3)">bin</text>
+        <text x="28" y="17" font-size="14" fill="#43e97b" font-family="Segoe UI, Arial, sans-serif" font-weight="bold">Binify</text>
+      </svg>
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+      aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto align-items-center">
+        <li class="nav-item">
+          <form class="d-flex" method="get" action="#">
+            <input class="form-control me-2" type="search" placeholder="Пошук..." aria-label="Пошук" name="q">
+            <button class="btn btn-logo me-2" type="submit">Знайти</button>
+          </form>
+        </li>
+        <li class="nav-item"><a class="btn btn-logo me-2" href="{% url 'main' %}">Головна</a></li>
+        <li class="nav-item"><a class="btn btn-logo me-2" href="{% url 'create_bin' %}">Створити Bin</a></li>
+        <li class="nav-item"><a class="btn btn-logo me-2" href="{% url 'about' %}">Про сайт</a></li>
+        {% if user.is_authenticated %}
+          <li class="nav-item"><a class="btn btn-logo me-2 disabled" href="#">Профіль</a></li>
+          <li class="nav-item"><a class="btn btn-logo me-2 disabled" href="#">Вийти</a></li>
+        {% else %}
+          <li class="nav-item"><a class="btn btn-logo me-2" href="#">Увійти</a></li>
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+</nav>
