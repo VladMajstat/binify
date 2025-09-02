@@ -1,10 +1,15 @@
 from django.shortcuts import render
+from .choices import CATEGORY_CHOICES, LANGUAGE_CHOICES, EXPIRY_CHOICES, ACCESS_CHOICES
 
 # логіка для створення нового bin.
 def create_bin(request):
     context = {
         "title": "Створити Bin — Binify",
         "content": "Створити новий Bin",
+        "category_choices": CATEGORY_CHOICES,
+        "language_choices": LANGUAGE_CHOICES,
+        "expiry_choices": EXPIRY_CHOICES,
+        "access_choices": ACCESS_CHOICES,
     }
 
     return render(request, "bins/create_bin.html", context)

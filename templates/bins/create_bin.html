@@ -11,10 +11,10 @@
     <div class="row">
         <div class="col-md-6 mb-3">
             <label for="id_category" class="form-label">Категорія:</label>
-            <select class="form-select" id="id_category" name="category">
-                <option value="Код">Код</option>
-                <option value="Текст">Текст</option>
-                <option value="Заметка">Заметка</option>
+            <select name="category" class="form-select" id="id_category">
+                {% for value, label in category_choices %}
+                  <option value="{{ value }}">{{ label }}</option>
+                {% endfor %}
             </select>
         </div>
         <div class="col-md-6 mb-3">
@@ -23,29 +23,26 @@
         </div>
         <div class="col-md-6 mb-3">
             <label for="id_language" class="form-label">Мова:</label>
-            <select class="form-select" id="id_language" name="language">
-                <option value="Python">Python</option>
-                <option value="JavaScript">JavaScript</option>
-                <option value="HTML">HTML</option>
-                <option value="CSS">CSS</option>
-                <option value="Text">Text</option>
+            <select name="language" class="form-select" id="id_language">
+                {% for value, label in language_choices %}
+                  <option value="{{ value }}">{{ label }}</option>
+                {% endfor %}
             </select>
         </div>
         <div class="col-md-6 mb-3">
             <label for="id_expiry" class="form-label">Термін дії:</label>
-            <select class="form-select" id="id_expiry" name="expiry">
-                <option value="1 день">1 день</option>
-                <option value="7 днів">7 днів</option>
-                <option value="30 днів">30 днів</option>
-                <option value="Безстроково">Безстроково</option>
+            <select name="expiry" class="form-select" id="id_expiry">
+                {% for value, label in expiry_choices %}
+                  <option value="{{ value }}">{{ label }}</option>
+                {% endfor %}
             </select>
         </div>
         <div class="col-md-6 mb-3">
             <label for="id_access" class="form-label">Доступність:</label>
-            <select class="form-select" id="id_access" name="access">
-                <option value="Публічний">Публічний</option>
-                <option value="Приватний">Приватний</option>
-                <option value="За посиланням">За посиланням</option>
+            <select name="access" class="form-select" id="id_access">
+                {% for value, label in access_choices %}
+                  <option value="{{ value }}">{{ label }}</option>
+                {% endfor %}
             </select>
         </div>
         <div class="col-md-6 mb-3">

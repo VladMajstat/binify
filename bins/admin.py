@@ -1,3 +1,5 @@
 from django.contrib import admin
 
-# Register your models here.
+from bins.models import Create_Bins
+
+admin.site.register(Create_Bins)
