@@ -4,7 +4,7 @@
 <div class="text-center mb-4">
     <h1>Binify</h1>
     <p class="lead">{{ content }}</p>
-    <a href="{% url 'create_bin' %}" class="btn btn-success btn-lg">{{ create_new_bin }}</a>
+    <a href="{% url 'bins:index' %}" class="btn btn-success btn-lg">{{ create_new_bin }}</a>
 </div>
 <h3>{{ last_bin }}</h3>
 <div class="row">
@@ -13,7 +13,7 @@
             <div class="card bg-dark text-light h-100">
                 <div class="card-body">
                     <h5 class="card-title">
-                        <a href="{% url 'view_bin' bin.slug %}" class="link-light">{{ bin.title|default:"Без назви" }}</a>
+                        <a href="{% url 'bins:view_bin' bin.slug %}" class="link-light">{{ bin.title|default:"Без назви" }}</a>
                     </h5>
                     <p class="card-text small">
                         {{ bin.get_language_display }}<br>

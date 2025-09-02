@@ -1,5 +1,5 @@
 {% extends "base/base.html" %}
-{% block title %}Перегляд Bin — Binify{% endblock %}
+{% comment %} {% block title %}{{ title }}{% endblock %} {% endcomment %}
 {% block extra_head %}
 {{ block.super }}
 <meta property="og:title" content="{{ bin.title|default:"Binify Bin" }}">

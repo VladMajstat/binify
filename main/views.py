@@ -19,14 +19,6 @@ def view_bin(request):
 
     return render(request, 'main/view_bin.html', context)
 
-def create_bin(request):
-    context = {
-        "title": "Створити Bin — Binify",
-        "content": "Створити новий Bin",
-    }
-
-    return render(request, 'main/create_bin.html', context)
-
 def about(request):
     context = {
         "title": "Про сайт",
