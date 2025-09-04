@@ -128,3 +128,18 @@ STATICFILES_DIRS = [
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# cloudflare
+AWS_ACCESS_KEY_ID = "681e93a6d6bcc1b6e188dbbe34fcde9a"
+AWS_SECRET_ACCESS_KEY = (
+    "2753ca3d3dd640f113806867495e5c41f9dd7f69e403eb8d55885a97f0c6ed87"
+)
+AWS_STORAGE_BUCKET_NAME = "binify-bucket"
+AWS_S3_REGION_NAME = "EEUR"
+AWS_S3_ENDPOINT_URL = (
+    "https://037be68566e57c65fbe96c25cae2062f.r2.cloudflarestorage.com"
+)
+AWS_S3_CUSTOM_DOMAIN = (
+    f"{AWS_STORAGE_BUCKET_NAME}.037be68566e57c65fbe96c25cae2062f.r2.cloudflarestorage.com"
+)
+AWS_DEFAULT_ACL = None

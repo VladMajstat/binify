@@ -3,9 +3,9 @@
 {% block extra_head %}
 {{ block.super }}
 <meta property="og:title" content="{{ bin.title|default:"Binify Bin" }}">
-<meta property="og:description" content="{{ bin.content|truncatechars:150 }}">
+<meta property="og:description" content="{{ content|truncatechars:150 }}">
 <meta property="og:url" content="{{ request.build_absolute_uri }}">
-<meta name="description" content="{{ bin.content|truncatechars:150 }}">
+<meta name="description" content="{{ content|truncatechars:150 }}">
 {% endblock %}
 {% block content %}
 <h2>{{ bin.title|default:"Без назви" }}</h2>
@@ -23,8 +23,8 @@
     <button class="btn btn-outline-light" id="copy-btn">Копіювати</button>
     <button class="btn btn-outline-info" id="share-btn">Поділитись</button>
     {% if user == bin.author %}
-        <a href="{% url 'edit_bin' bin.slug %}" class="btn btn-outline-warning">Редагувати</a>
-        <a href="{% url 'delete_bin' bin.slug %}" class="btn btn-outline-danger">Видалити</a>
+        <a href="{% url 'edit_bin' bin.id %}" class="btn btn-outline-warning">Редагувати</a>
+        <a href="{% url 'delete_bin' bin.id %}" class="btn btn-outline-danger">Видалити</a>
     {% endif %}
 </div>
 <script>
