@@ -6,59 +6,83 @@ from django.conf import settings
 from .choices import CATEGORY_CHOICES, LANGUAGE_CHOICES, EXPIRY_CHOICES, ACCESS_CHOICES
 import uuid
 from .models import Create_Bins
+from django.contrib import messages
+from datetime import timedelta
+from django.utils import timezone
 
 # логіка для створення нового bin.
 # @login_required(login_url='/login/')
 def create_bin(request):
 
     if request.method == "POST":
+        try:
+            content = request.POST.get('content')
+            category = request.POST.get('category')
+            language = request.POST.get('language')
+            expiry = request.POST.get('expiry')
+            access = request.POST.get('access')
+            title = request.POST.get('title')
+            tags = request.POST.get('tags')
 
-        content = request.POST.get('content')
-        category = request.POST.get('category')
-        language = request.POST.get('language')
-        expiry = request.POST.get('expiry')
-        access = request.POST.get('access')
-        title = request.POST.get('title')
-        tags = request.POST.get('tags')
+            # Генерує унікальне ім’я файлу для bin
+            filename = f"bins/bin_{uuid.uuid4().hex}.txt"
 
-        # Генерує унікальне ім’я файлу для bin
-        filename = f"bins/bin_{uuid.uuid4().hex}.txt"
-        #Створюємо назву нового bin
-        full_title = f"{request.user.username}/{title}"
+            # Підключення до R2
+            s3 = boto3.client(
+                "s3",
+                aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+                aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+                endpoint_url=settings.AWS_S3_ENDPOINT_URL,
+                region_name=settings.AWS_S3_REGION_NAME,
+            )
 
-        # Підключення до R2
-        s3 = boto3.client(
-            "s3",
-            aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-            endpoint_url=settings.AWS_S3_ENDPOINT_URL,
-            region_name=settings.AWS_S3_REGION_NAME,
-        )
+            # Завантаження файлу
+            s3.put_object(
+                Bucket=settings.AWS_STORAGE_BUCKET_NAME,
+                Key=filename,
+                Body=content,
+                ContentType='text/plain'
+            )
 
-        # Завантаження файлу
-        s3.put_object(
-            Bucket=settings.AWS_STORAGE_BUCKET_NAME,
-            Key=filename,
-            Body=content,
-            ContentType='text/plain'
-        )
+            file_url = f"https://{settings.AWS_S3_CUSTOM_DOMAIN}/{filename}"
 
-        file_url = f"https://{settings.AWS_S3_CUSTOM_DOMAIN}/{filename}"
+            EXPIRY_MAP = {
+                "never": None,
+                "1m": timedelta(minutes=1),
+                "1h": timedelta(hours=1),
+                "12h": timedelta(hours=12),
+                "1d": timedelta(days=1),
+                "1w": timedelta(weeks=1),
+                "2w": timedelta(weeks=2),
+                "30d": timedelta(days=30),
+                "6mo": timedelta(days=30 * 6),
+                "1y": timedelta(days=365),
+            }
 
-        # Зберігаємо Bin у БД
-        Create_Bins.objects.create(
-            file_url=file_url,
-            category=category,
-            language=language,
-            expiry=expiry,
-            access=access,
-            title=full_title,
-            tags=tags,
-            author=request.user,
-        )
+            expiry_at = None
+            if expiry in EXPIRY_MAP and EXPIRY_MAP[expiry]:
+                expiry_at = timezone.now() + EXPIRY_MAP[expiry]
 
-        # Редірект на сторінку перегляду bin
-        return redirect("main:index")
+
+            # Зберігаємо Bin у БД
+            Create_Bins.objects.create(
+                file_url=file_url,
+                category=category,
+                language=language,
+                expiry=expiry,
+                expiry_at=expiry_at,
+                access=access,
+                title=f"{request.user.username}/{title}",
+                tags=tags,
+                author=request.user,
+            )
+
+            # Редірект на сторінку перегляду bin
+            return redirect("main:index")
+        except Exception as e:
+            print(f"Помилка при створенні bin: {e}")
+            messages.error(request, "❗ Не вдалося створити Bin. Спробуйте ще раз.")
+            return redirect("main:index")
     else:
 
         context = {

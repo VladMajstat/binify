@@ -9,6 +9,7 @@ class Create_Bins(models.Model):
     tags = models.CharField(max_length=200, blank=True, verbose_name="Теги", help_text="Введіть теги через кому для кращої організації")
     language = models.CharField(max_length=50, blank=True, choices=LANGUAGE_CHOICES, default='none', verbose_name="Мова", help_text="Виберіть мову для підсвітки синтаксису")
     expiry = models.CharField(max_length=50, choices=EXPIRY_CHOICES, default='never', verbose_name="Термін дії", help_text="Виберіть, коли цей bin має бути видалений",)
+    expiry_at = models.DateTimeField(null=True, blank=True, verbose_name="Bin видаляється після")
     access = models.CharField(max_length=50, choices=ACCESS_CHOICES, default='public', verbose_name="Доступність", help_text="Виберіть, яким буде цей bin, публічним або приватним",)
     title = models.CharField(max_length=150, blank=True, verbose_name="Назва")
     author = models.ForeignKey(
