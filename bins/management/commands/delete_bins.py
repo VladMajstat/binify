@@ -27,11 +27,6 @@ class Command(BaseCommand):
         for bin in expired_bins:
             # Витягуємо ключ файлу з file_url
             key = bin.file_url.split("/")[-1]
-            # print(f"Видаляємо файл з ключем: {key}")
-            # try:
-            #     s3.delete_object(Bucket=settings.AWS_STORAGE_BUCKET_NAME, Key=key)
-            # except Exception as e:
-            #     print(f"Помилка видалення: {e}")
             try:
                 s3.delete_object(
                     Bucket=settings.AWS_STORAGE_BUCKET_NAME, Key=f"bins/{key}"

@@ -1,32 +1,61 @@
 {% extends "base/base.html" %}
-{% comment %} {% block title %}{{ title }}{% endblock %} {% endcomment %}
-{% block extra_head %}
-{{ block.super }}
-<meta property="og:title" content="{{ bin.title|default:"Binify Bin" }}">
-<meta property="og:description" content="{{ content|truncatechars:150 }}">
-<meta property="og:url" content="{{ request.build_absolute_uri }}">
-<meta name="description" content="{{ content|truncatechars:150 }}">
-{% endblock %}
 {% block content %}
-<h2>{{ bin.title|default:"Без назви" }}</h2>
-<p>
-    Мова: <b>{{ bin.get_language_display }}</b>
-    <br>
-    Автор: {{ bin.author.username|default:"Гість" }}
-    <br>
-    Створено: {{ bin.created_at|date:"d.m.Y H:i" }}
-</p>
-<div class="code-block mb-3">
-    <pre><code class="language-{{ bin.language|default:'plaintext' }}">{{ bin.content|linebreaksbr|escape }}</code></pre>
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="d-flex align-items-center">
+            <img src="{{ bin.author.profile.avatar.url|default:'/static/default_avatar.png' }}" alt="avatar" class="rounded-circle me-3" width="56" height="56">
+            <div>
+                <h2 class="mb-0">{{ bin.title|default:"Без назви" }}</h2>
+                <div class="text-muted small">
+                    <a href="{% url 'bins:user_bins' bin.author.username %}" class="fw-bold text-decoration-none">@{{ bin.author.username|default:"Гість" }}</a>
+                    &bull; {{ bin.created_at|date:"d.m.Y H:i" }}
+                    &bull; Переглядів: {{ bin.views|default:"0" }}
+                    &bull; Вік: {{ bin.created_at|timesince }} тому
+                </div>
+            </div>
+        </div>
+        <div>
+            <!-- Можна додати меню для автора (редагувати/видалити) -->
+        </div>
+    </div>
+
+    <!-- Коментарі над кодом -->
+    <div class="mb-3">
+        <h5 class="mb-2">Коментарі</h5>
+        <div id="comments-list">
+            {% for comment in bin.comments.all %}
+                <div class="border rounded p-2 mb-2">
+                    <b>{{ comment.author.username|default:"Гість" }}</b>:
+                    <span>{{ comment.text }}</span>
+                    <span class="text-muted small">({{ comment.created_at|timesince }} тому)</span>
+                </div>
+            {% empty %}
+                <div class="text-muted">Коментарів ще немає.</div>
+            {% endfor %}
+        </div>
+        <form method="post" action="{% url 'bins:add_comment' bin.id %}" class="d-flex mt-2">
+            {% csrf_token %}
+            <input type="text" name="text" class="form-control me-2" placeholder="Залишити коментар..." required>
+            <button type="submit" class="btn btn-primary">Додати</button>
+        </form>
+    </div>
+
+    <!-- Інформація про код -->
+    <div class="d-flex align-items-center mb-2">
+        <span class="badge bg-info text-dark me-2">{{ bin.get_language_display }}</span>
+        <span class="text-muted me-2">Розмір: {{ bin.size|filesizeformat }}</span>
+        <button class="btn btn-outline-success btn-sm me-2" id="like-btn">👍 {{ bin.likes|default:"0" }}</button>
+        <button class="btn btn-outline-danger btn-sm me-2" id="dislike-btn">👎 {{ bin.dislikes|default:"0" }}</button>
+        <button class="btn btn-outline-secondary btn-sm me-2" id="copy-btn">Копіювати</button>
+        <button class="btn btn-outline-info btn-sm" id="share-btn">URL</button>
+    </div>
+
+    <!-- Вміст біна -->
+    <div class="code-block mb-3">
+        <pre><code class="language-{{ bin.language|default:'plaintext' }}">{{ bin.content|linebreaksbr|escape }}</code></pre>
+    </div>
 </div>
-<div class="mb-3">
-    <button class="btn btn-outline-light" id="copy-btn">Копіювати</button>
-    <button class="btn btn-outline-info" id="share-btn">Поділитись</button>
-    {% if user == bin.author %}
-        <a href="{% url 'edit_bin' bin.id %}" class="btn btn-outline-warning">Редагувати</a>
-        <a href="{% url 'delete_bin' bin.id %}" class="btn btn-outline-danger">Видалити</a>
-    {% endif %}
-</div>
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('copy-btn').onclick = function() {
@@ -36,9 +65,10 @@
         }
         document.getElementById('share-btn').onclick = function() {
             navigator.clipboard.writeText(window.location.href);
-            this.innerText = "Посилання скопійовано!";
-            setTimeout(() => this.innerText = "Поділитись", 1500);
+            this.innerText = "URL скопійовано!";
+            setTimeout(() => this.innerText = "URL", 1500);
         }
+        // Лайк/дизлайк можна реалізувати через AJAX
     });
 </script>
 {% endblock %}

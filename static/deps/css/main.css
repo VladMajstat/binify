@@ -130,3 +130,23 @@ body {
   text-decoration: none;
   border-color: #43e97b;
 }
+
+/* === Dropdown User Menu (Dark Green) === */
+.user-dropdown-dark-green {
+  background: #23272b !important;
+  border: 2px solid #43e97b !important;
+  box-shadow: 0 4px 24px rgba(67, 233, 123, 0.08);
+}
+.user-dropdown-green {
+  color: #43e97b !important;
+  font-weight: 500;
+  background: transparent !important;
+  transition: background 0.2s, color 0.2s;
+}
+.user-dropdown-green:hover, .user-dropdown-green:focus {
+  background: #181c20 !important;
+  color: #fff !important;
+}
+.user-dropdown-divider {
+  border-top: 1.5px solid #43e97b !important;
+}
