@@ -39,6 +39,9 @@
               <li><a class="dropdown-item user-dropdown-green" href="#">Мої Bin</a></li>
               <li><a class="dropdown-item user-dropdown-green" href="#">Мої коментарі</a></li>
               <li><a class="dropdown-item user-dropdown-green" href="{% url 'users:profile' %}">Мій профіль</a></li>
+              {% if user.is_superuser or user.is_staff %}
+                <li><a class="dropdown-item user-dropdown-green" href="/admin/">Адмін панель</a></li>
+              {% endif %}
               <li><hr class="dropdown-divider user-dropdown-divider"></li>
               <li><a class="dropdown-item user-dropdown-green text-danger" href="{% url 'users:logout' %}">Вийти</a></li>
             </ul>

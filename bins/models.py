@@ -21,15 +21,15 @@ class Create_Bins(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Створено")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Оновлено")
 
-    # def __str__(self):
-    #     """Повертає рядкове представлення об'єкта (назва або частина вмісту)"""
-    #     return self.title or self.content[:30]
 
     class Meta:
         db_table = 'create_bin'
         verbose_name = "Bin"
         verbose_name_plural = "Bins"
 
+    #Повертає рядкове представлення об'єкта (назва або частина вмісту)
+    def __str__(self):
+        return self.title
 
 # class ViewBin(models.Model):
     

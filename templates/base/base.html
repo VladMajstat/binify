@@ -33,6 +33,7 @@
     {% include 'base/navbar.html' %}
     <!-- content in page -->
     <div class="container mt-4">
+        {% include "includes/notifications.html" %}
         {% block content %}{% endblock %}
     </div>
     <div class="footer">
