@@ -11,7 +11,7 @@ from datetime import timedelta
 from django.utils import timezone
 
 # логіка для створення нового bin.
-# @login_required(login_url='/login/')
+@login_required()
 def create_bin(request):
 
     if request.method == "POST":
