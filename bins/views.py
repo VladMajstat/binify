@@ -1,100 +1,62 @@
 from django.shortcuts import render, redirect
-
-from django.contrib.auth.decorators import login_required
-import boto3
-from django.conf import settings
+from .forms import CreateBinsForm
 from .choices import CATEGORY_CHOICES, LANGUAGE_CHOICES, EXPIRY_CHOICES, ACCESS_CHOICES
 import uuid
 from .models import Create_Bins
 from django.contrib import messages
-from datetime import timedelta
-from django.utils import timezone
+from .utils import upload_to_r2, get_expiry_map
 
 # логіка для створення нового bin.
-@login_required()
 def create_bin(request):
-
     if request.method == "POST":
-        try:
-            content = request.POST.get('content')
-            category = request.POST.get('category')
-            language = request.POST.get('language')
-            expiry = request.POST.get('expiry')
-            access = request.POST.get('access')
-            title = request.POST.get('title')
-            tags = request.POST.get('tags')
-
-            # Генерує унікальне ім’я файлу для bin
-            filename = f"bins/bin_{uuid.uuid4().hex}.txt"
-
-            # Підключення до R2
-            s3 = boto3.client(
-                "s3",
-                aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-                aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-                endpoint_url=settings.AWS_S3_ENDPOINT_URL,
-                region_name=settings.AWS_S3_REGION_NAME,
-            )
-
-            # Завантаження файлу
-            s3.put_object(
-                Bucket=settings.AWS_STORAGE_BUCKET_NAME,
-                Key=filename,
-                Body=content,
-                ContentType='text/plain'
-            )
-
-            file_url = f"https://{settings.AWS_S3_CUSTOM_DOMAIN}/{filename}"
-
-            EXPIRY_MAP = {
-                "never": None,
-                "1m": timedelta(minutes=1),
-                "1h": timedelta(hours=1),
-                "12h": timedelta(hours=12),
-                "1d": timedelta(days=1),
-                "1w": timedelta(weeks=1),
-                "2w": timedelta(weeks=2),
-                "30d": timedelta(days=30),
-                "6mo": timedelta(days=30 * 6),
-                "1y": timedelta(days=365),
-            }
-
-            expiry_at = None
-            if expiry in EXPIRY_MAP and EXPIRY_MAP[expiry]:
-                expiry_at = timezone.now() + EXPIRY_MAP[expiry]
-
-
-            # Зберігаємо Bin у БД
-            Create_Bins.objects.create(
-                file_url=file_url,
-                category=category,
-                language=language,
-                expiry=expiry,
-                expiry_at=expiry_at,
-                access=access,
-                title=f"{request.user.username}/{title}",
-                tags=tags,
-                author=request.user,
-            )
-
-            # Редірект на сторінку перегляду bin
-            return redirect("main:index")
-        except Exception as e:
-            print(f"Помилка при створенні bin: {e}")
-            messages.error(request, "❗ Не вдалося створити Bin. Спробуйте ще раз.")
-            return redirect("main:index")
+        # Створюємо форму з даними, які надіслав користувач
+        form = CreateBinsForm(request.POST)
+        # Перевіряємо валідність даних
+        if form.is_valid():
+            try:
+                data = form.cleaned_data
+                # Генеруємо унікальне ім'я файлу для Bin
+                filename = f"bins/bin_{uuid.uuid4().hex}.txt"
+                # Завантажуємо контент у Cloudflare R2
+                file_url = upload_to_r2(filename, data['content'])
+                # Визначаємо дату видалення Bin
+                expiry_at = get_expiry_map(data['expiry'])
+                # Створюємо Bin у базі даних
+                Create_Bins.objects.create(
+                    file_url=file_url,
+                    category=data['category'],
+                    language=data['language'],
+                    expiry=data['expiry'],
+                    expiry_at=expiry_at,
+                    access=data['access'],
+                    title=f"{request.user.username}/{data['title']}",
+                    tags=data['tags'],
+                    author=request.user,
+                )
+                messages.success(request, "Bin успішно створено!")
+                return redirect("main:index")
+            except Exception as e:
+                print(f"Помилка при створенні bin: {e}")
+                messages.error(request, "❗ Не вдалося створити Bin. Спробуйте ще раз.")
+                return redirect("main:index")
+        else:
+            # Якщо дані невалідні — показуємо помилку
+            messages.error(request, "❗ Дані форми некоректні. Перевірте введене!")
     else:
+        # Якщо GET-запит — створюємо порожню форму
+        form = CreateBinsForm()
 
-        context = {
-            "title": "Створити Bin — Binify",
-            "content": "Створити новий Bin",
-            "category_choices": CATEGORY_CHOICES,
-            "language_choices": LANGUAGE_CHOICES,
-            "expiry_choices": EXPIRY_CHOICES,
-            "access_choices": ACCESS_CHOICES,
-        }
-
-        return render(request, "bins/create_bin.html", context)
+    # Передаємо форму та choices у шаблон для рендерингу
+    context = {
+        "title": "Створити Bin — Binify",
+        "content": "Створити новий Bin",
+        "form": form,
+        "category_choices": CATEGORY_CHOICES,
+        "language_choices": LANGUAGE_CHOICES,
+        "expiry_choices": EXPIRY_CHOICES,
+        "access_choices": ACCESS_CHOICES,
+    }
+    return render(request, "bins/create_bin.html", context)
 
 # показує вміст конкретного bin за ідентифікатором або slug
 def view_bin(request):

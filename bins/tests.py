@@ -1,6 +1,7 @@
 from django.test import TestCase, Client
 from django.contrib.auth import get_user_model
 from django.urls import reverse
+from unittest.mock import patch
 
 
 class CreateBinErrorTest(TestCase):
@@ -11,16 +12,17 @@ class CreateBinErrorTest(TestCase):
         )
         self.client.login(username="testuser", password="testpass")
 
-    def test_create_bin_error_message(self):
-        # Викликаємо create_bin з некоректними даними, щоб викликати помилку (наприклад, порожній content)
+    @patch("boto3.client")
+    def test_create_bin_error_message(self, mock_boto):
+        # Емуляція помилки при збереженні у Cloudflare (R2)
+        mock_boto.return_value.put_object.side_effect = Exception("R2 error")
         response = self.client.post(reverse('bins:index'), {
-            'content': '',
+            'content': 'test content',
             'title': 'testbin',
-            'category': 'code',  # додайте значення за замовчуванням
-            'language': 'text',
-            'expiry': 'forever',
+            'category': 'CODE',
+            'language': 'python',
+            'expiry': 'never',
             'access': 'public',
             'tags': '',
         }, follow=True)
-        # Перевіряємо, що повідомлення про помилку присутнє у відповіді
         self.assertContains(response, "Не вдалося створити Bin")
