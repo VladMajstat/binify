@@ -33,10 +33,10 @@
         {% if user.is_authenticated %}
           <li class="nav-item dropdown ms-3">
             <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-              <img src="{{ user.profile.avatar.url|default:'/static/deps/images/baseavatar.jpg' }}" alt="avatar" class="rounded-circle" width="40" height="40">
+              <img src="{{ user.image.url|default:'/static/deps/images/baseavatar.jpg' }}" alt="avatar" class="rounded-circle" width="40" height="40">
             </a>
             <ul class="dropdown-menu dropdown-menu-end user-dropdown-dark-green" aria-labelledby="userDropdown">
-              <li><a class="dropdown-item user-dropdown-green" href="#">Мої Bin</a></li>
+              <li><a class="dropdown-item user-dropdown-green" href="{% url "bins:user_bins" %}">Мої Bin</a></li>
               <li><a class="dropdown-item user-dropdown-green" href="#">Мої коментарі</a></li>
               <li><a class="dropdown-item user-dropdown-green" href="{% url 'users:profile' %}">Мій профіль</a></li>
               {% if user.is_admin or user.is_staff %}
