@@ -1,13 +1,14 @@
 from django.shortcuts import render
-from .forms import CreateBinsForm
-from django.http import HttpResponseRedirect
+from .forms import CreateBinsForm, BinCommentForm
+from django.shortcuts import redirect
 from .choices import CATEGORY_CHOICES, LANGUAGE_CHOICES, EXPIRY_CHOICES, ACCESS_CHOICES
 import uuid
-from .models import Create_Bins, BinLike
+from .models import Create_Bins, BinLike, BinComment
 from django.contrib import messages
 from .utils import upload_to_r2, get_expiry_map, fetch_bin_content_from_r2
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
+from django.template.loader import render_to_string
 
 
 # логіка для створення нового bin.
@@ -41,11 +42,11 @@ def create_bin(request):
                     author=request.user,
                 )
                 messages.success(request, "Bin успішно створено!")
-                return HttpResponseRedirect("main:index")
+                return redirect("main:index")
             except Exception as e:
                 print(f"Помилка при створенні bin: {e}")
                 messages.error(request, "❗ Не вдалося створити Bin. Спробуйте ще раз.")
-                return HttpResponseRedirect("main:index")
+                return redirect("main:index")
         else:
             # Якщо дані невалідні — показуємо помилку
             messages.error(request, "❗ Дані форми некоректні. Перевірте введене!")
@@ -80,11 +81,15 @@ def view_bin(request, id):
     else:
         bin_content = "Контент не знайдено."
 
+    # Отримуємо всі коментарі для цього Bin
+    comments = bin.comments.all().order_by('-created_at')
+
     content = {
         "title": f"Перегляд Bin — {bin.title}",
         "content": "Перегляд існуючого Bin",
         'bin': bin,
         'bin_content': bin_content,
+        'comments': comments,  # Передаємо коментарі у шаблон
     }
     return render(request, "bins/view_bin.html", content)
 
@@ -127,6 +132,34 @@ def likes_dislikes_bins(request, id):
     bin.save(update_fields=["likes_count", "dislikes_count"])
     # Повертаємо дані у форматі JSON для AJAX
     return JsonResponse({'likes': likes, 'dislikes': dislikes})
+
+
+def bin_comment(request, id):
+    # Отримуємо Bin за id (перевіряємо, чи існує)
+    bin = get_object_or_404(Create_Bins, pk=id)
+    if request.method == "POST":
+        # Створюємо форму коментаря з POST-даних
+        form = BinCommentForm(request.POST)
+        if form.is_valid():
+            # Створюємо екземпляр коментаря, але не зберігаємо у базі
+            comment = form.save(commit=False)
+            # Прив'язуємо коментар до Bin
+            comment.bin = bin
+            if request.user.is_authenticated:
+                # Якщо користувач авторизований — зберігаємо автора
+                comment.author = request.user
+            else:
+                return JsonResponse({'success': False, 'error': 'Тільки авторизовані користувачі можуть залишати коментарі.'})
+            # Зберігаємо коментар у базі
+            comment.save()
+            # Рендеримо HTML для нового коментаря
+            comment_html = render_to_string('bins/bin_comment.html', {'comment': comment})
+            return JsonResponse({'success': True, 'comment_html': comment_html})
+        else:
+            error = form.errors.as_text()
+            return JsonResponse({'success': False, 'error': error})
+    return JsonResponse({'success': False, 'error': 'Invalid request'})
+
 
 # дозволяє автору змінити вміст bin.
 # def edit_bin(request):

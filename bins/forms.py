@@ -2,7 +2,7 @@ from django import forms
 from django.forms import ModelForm
 from .choices import CATEGORY_CHOICES, LANGUAGE_CHOICES, EXPIRY_CHOICES, ACCESS_CHOICES
 
-from bins.models import Create_Bins
+from .models import Create_Bins, BinComment
 
 class CreateBinsForm(ModelForm):
 
@@ -26,3 +26,19 @@ class CreateBinsForm(ModelForm):
             'title',
             'tags',
         ]
+
+class BinCommentForm(ModelForm):
+
+    text = forms.CharField(min_length=3, max_length=10000, label="")
+
+    def clean_text(self):
+        value = self.cleaned_data['text']
+        spam_words = ['spam', 'http://', 'https://', 'buy now', 'free money', "click here", "visit", "promo", "discount", "sex", "xxx"]  # додайте свої слова
+        for word in spam_words:
+            if word in value.lower():
+                raise forms.ValidationError("Коментар містить спам або заборонені слова.")
+        return value
+
+    class Meta:
+        model = BinComment
+        fields = ['text']

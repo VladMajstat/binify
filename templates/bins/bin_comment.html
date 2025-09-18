@@ -1,0 +1,5 @@
+<div class="border rounded p-2 mb-2 card bg-dark">
+    <b class="user-dropdown-green">{{ comment.author.username }}:</b>
+    <span class="text-white small">{{ comment.text }}</span>
+    <span class="text-white small">({{ comment.created_at|timesince }} тому)</span>
+</div>

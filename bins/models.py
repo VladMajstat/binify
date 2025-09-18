@@ -32,7 +32,7 @@ class Create_Bins(models.Model):
 
     #Повертає рядкове представлення об'єкта (назва або частина вмісту)
     def __str__(self):
-        return self.title
+        return f"{self.title}"
 
 # Модель для збереження переглядів бінів
 class ViewBin(models.Model):
@@ -52,3 +52,17 @@ class BinLike(models.Model):
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     is_like = models.BooleanField(default=True)  # True=лайк, False=дизлайк
     created_at = models.DateTimeField(auto_now_add=True)
+
+class BinComment(models.Model):
+    bin = models.ForeignKey(Create_Bins, on_delete=models.CASCADE, related_name="comments")  # звʼязок з біном
+    author = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, null=True, blank=True)  # автор коментаря
+    text = models.TextField(verbose_name="Текст коментаря")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата створення")
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Коментар"
+        verbose_name_plural = "Коментарі"
+
+    def __str__(self):
+        return f"{self.author}: {self.text[:30]}"
