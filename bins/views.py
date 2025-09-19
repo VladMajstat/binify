@@ -8,57 +8,29 @@ from django.template.loader import render_to_string
 
 from .choices import CATEGORY_CHOICES, LANGUAGE_CHOICES, EXPIRY_CHOICES, ACCESS_CHOICES
 from .models import Create_Bins, BinLike
-from .utils import upload_to_r2, get_expiry_map, fetch_bin_content_from_r2, get_bin_size
+from .utils import fetch_bin_content_from_r2, create_bin_from_data
 from .forms import CreateBinsForm, BinCommentForm, BinComment
 
-
-# логіка для створення нового bin.
 def create_bin(request):
     if request.method == "POST":
-        # Створюємо форму з даними, які надіслав користувач
         form = CreateBinsForm(request.POST)
-        # Перевіряємо валідність даних
         if form.is_valid():
-            try:
-                data = form.cleaned_data
-                # Генеруємо унікальне ім'я файлу для Bin
-                filename = f"bins/bin_{uuid.uuid4().hex}.txt"
-                # Завантажуємо контент у Cloudflare R2
-                file_url = upload_to_r2(filename, data['content'])
-                # Визначаємо дату видалення Bin
-                expiry_at = get_expiry_map(data['expiry'])
-                # Додаємо ключ файлу (шлях у бакеті)
-                file_key = filename
-                #Отримуємо розмір Bin
-                size_bin = get_bin_size(file_key)
-                # Створюємо Bin у базі даних
-                Create_Bins.objects.create(
-                    file_url=file_url,
-                    file_key=file_key,
-                    category=data['category'],
-                    language=data['language'],
-                    expiry=data['expiry'],
-                    expiry_at=expiry_at,
-                    access=data['access'],
-                    title=f"{request.user.username}/{data['title']}",
-                    tags=data['tags'],
-                    author=request.user,
-                    size_bin=size_bin,
-                )
-                messages.success(request, "Bin успішно створено!")
-                return redirect("main:index")
-            except Exception as e:
-                print(f"Помилка при створенні bin: {e}")
-                messages.error(request, "❗ Не вдалося створити Bin. Спробуйте ще раз.")
-                return redirect("main:index")
+            if not request.user.is_authenticated:
+                request.session['pending_bin_data'] = form.cleaned_data
+                messages.info(request, "Для створення Bin потрібно увійти або зареєструватися.")
+                return redirect("users:login")
+            else:
+                success = create_bin_from_data(request, form.cleaned_data)
+                if success:
+                    messages.success(request, "Bin успішно створено!")
+                    return redirect("bins:index")
+                else:
+                    messages.error(request, "❗ Не вдалося створити Bin. Спробуйте ще раз.")
         else:
-            # Якщо дані невалідні — показуємо помилку
             messages.error(request, "❗ Дані форми некоректні. Перевірте введене!")
     else:
-        # Якщо GET-запит — створюємо порожню форму
         form = CreateBinsForm()
 
-    # Передаємо форму та choices у шаблон для рендерингу
     context = {
         "title": "Створити Bin — Binify",
         "content": "Створити новий Bin",

@@ -1,25 +1,25 @@
-<!-- Для non_field_erors  -->
+<!-- Для non_field_errors -->
 {% if form.non_field_errors %}
-    <div class="container mt-4">
-        <div class="row justify-content-center">
-            <div class="col-md-6">
-                <div class="alert alert-danger alert-dismissible fade show custom-shadow" role="alert">
-                    {{ form.non_field_errors }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            </div>
+  <div class="container mt-4">
+    <div class="row justify-content-center">
+      <div class="col-md-6">
+        <div class="alert alert-success alert-dismissible fade show custom-shadow" role="alert">
+          {{ form.non_field_errors }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
+      </div>
     </div>
+  </div>
 {% endif %}
 
-<!-- Окремо для помилок створення біна -->
+<!-- Окремо для повідомлень про створення біна -->
 {% if messages %}
   <div class="container mt-4">
     <div class="row justify-content-center">
       <div class="col-md-6">
         {% for message in messages %}
           {% if 'bin_error' in message.tags %}
-            <div id="notification" class="alert alert-danger alert-dismissible fade show custom-shadow" role="alert">
+            <div class="alert alert-success alert-dismissible fade show custom-shadow mb-2" role="alert">
               {{ message }}
               <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
@@ -32,27 +32,21 @@
 
 <!-- Всі інші повідомлення для користувачів, крім bin_error -->
 <div class="container mt-4">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            {% if messages %}
-                {% for message in messages %}
-                    {% if 'bin_error' not in message.tags %}
-                        {% if message.tags == 'success' %}
-                        <div id="notification" class="position-fixed start-50 translate-middle-x z-3 alert alert-success fade show custom-shadow" role="alert">
-                            {{ message }}
-                        </div>
-                        {% endif %}
-                        {% if message.tags == 'warning' %}
-                        <div id="notification" class="position-fixed start-50 translate-middle-x z-3 alert alert-danger fade show custom-shadow" role="alert">
-                            {{ message }}
-                        </div>
-                        {% endif %}
-                    {% endif %}
-                {% endfor %}
-            {% else %}
-            <div id="jq-notification" class="position-fixed start-50 translate-middle-x z-3 alert alert-success fade show custom-shadow" style="display: none;" role="alert">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      {% if messages %}
+        {% for message in messages %}
+          {% if 'bin_error' not in message.tags %}
+            <div class="alert alert-success alert-dismissible fade show custom-shadow mb-2" role="alert">
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
-            {% endif %}
+          {% endif %}
+        {% endfor %}
+      {% else %}
+        <div id="jq-notification" class="alert alert-success alert-dismissible fade show custom-shadow mb-2" style="display: none;" role="alert">
         </div>
+      {% endif %}
     </div>
+  </div>
 </div>

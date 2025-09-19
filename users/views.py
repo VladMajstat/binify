@@ -6,8 +6,10 @@ from django.contrib.auth.decorators import login_required
 
 from users.forms import UserLoginForm, UserRegistrationForm, ProfileForm
 from bins.models import Create_Bins, BinLike
+from bins.utils import create_bin_from_data
 
 def login(request):
+    next_url = request.GET.get('next') or request.POST.get('next')
     # Якщо запит POST — обробляємо дані форми
     if request.method == 'POST':
         # Створюємо форму з даними, які надіслав користувач
@@ -22,6 +24,18 @@ def login(request):
                 # Якщо користувач знайдений — виконуємо вхід і редірект на головну
                 auth.login(request, user)
                 messages.success(request, f"{username}, Ви успішно увійшли в систему.")
+                # --- Автоматичне створення Bin після логіну ---
+                pending_bin_data = request.session.pop('pending_bin_data', None)
+                if pending_bin_data:
+                    success = create_bin_from_data(request, pending_bin_data)
+                    if success:
+                        messages.success(request, "Bin успішно створено!")
+                    else:
+                        messages.error(request, "❗ Не вдалося створити Bin після логіну.")
+                    return HttpResponseRedirect(reverse('bins:index'))
+                # --- Редірект на next, якщо є ---
+                if next_url:
+                    return HttpResponseRedirect(next_url)
                 return HttpResponseRedirect(reverse('main:index'))
     else:
         # Якщо GET-запит — створюємо порожню форму
@@ -31,11 +45,12 @@ def login(request):
     context = {
         'title': 'Авторизація - Binify',
         'form': form,
+        'next': next_url,
     }
     return render(request, "users/login.html", context=context)
 
 def registration(request):
-
+    next_url = request.GET.get('next') or request.POST.get('next')
     if request.method == 'POST':
         form = UserRegistrationForm(data=request.POST)
         if form.is_valid():
@@ -43,6 +58,18 @@ def registration(request):
             user = form.instance
             auth.login(request, user)
             messages.success(request, f"{user.username}, Ви успішно зареєструвалися й увійшли в аккаунт.")
+            # --- Автоматичне створення Bin після реєстрації ---
+            pending_bin_data = request.session.pop('pending_bin_data', None)
+            if pending_bin_data:
+                success = create_bin_from_data(request, pending_bin_data)
+                if success:
+                    messages.success(request, "Bin успішно створено!")
+                else:
+                    messages.error(request, "❗ Не вдалося створити Bin після реєстрації.")
+                return HttpResponseRedirect(reverse('bins:index'))
+            # --- Редірект на next, якщо є ---
+            if next_url:
+                return HttpResponseRedirect(next_url)
             return HttpResponseRedirect(reverse('main:index'))
     else:
         form = UserRegistrationForm()
@@ -50,6 +77,7 @@ def registration(request):
     context = {
         'title': 'Реєстрація - Binify',
         'form':form,
+        'next': next_url,
     }
     return render(request, "users/registration.html", context=context)
 

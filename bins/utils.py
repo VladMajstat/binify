@@ -1,8 +1,35 @@
 import boto3
+import uuid
 from django.conf import settings
 from datetime import timedelta
 from django.utils import timezone
-from urllib.parse import urlparse
+
+from bins.models import Create_Bins
+
+def create_bin_from_data(request, data):
+    try:
+        filename = f"bins/bin_{uuid.uuid4().hex}.txt"
+        file_url = upload_to_r2(filename, data["content"])
+        expiry_at = get_expiry_map(data["expiry"])
+        file_key = filename
+        size_bin = get_bin_size(file_key)
+        Create_Bins.objects.create(
+            file_url=file_url,
+            file_key=file_key,
+            category=data["category"],
+            language=data["language"],
+            expiry=data["expiry"],
+            expiry_at=expiry_at,
+            access=data["access"],
+            title=f"{request.user.username}/{data['title']}",
+            tags=data["tags"],
+            author=request.user,
+            size_bin=size_bin,
+        )
+        return True
+    except Exception as e:
+        print(f"Помилка при створенні bin: {e}")
+        return False
 
 def get_s3_client():
     return boto3.client(
