@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth import get_user_model
+from django.utils import timezone
+
 from .choices import CATEGORY_CHOICES, LANGUAGE_CHOICES, EXPIRY_CHOICES, ACCESS_CHOICES
 
 class Create_Bins(models.Model):
@@ -13,6 +15,7 @@ class Create_Bins(models.Model):
     expiry_at = models.DateTimeField(null=True, blank=True, verbose_name="Bin видаляється після")
     access = models.CharField(max_length=50, choices=ACCESS_CHOICES, default='public', verbose_name="Доступність", help_text="Виберіть, яким буде цей bin, публічним або приватним",)
     title = models.CharField(max_length=150, blank=True, verbose_name="Назва")
+    size_bin = models.PositiveIntegerField(default=0, verbose_name="Розмір (байт)", help_text="Розмір вмісту в байтах")
     author = models.ForeignKey(
         get_user_model(),  # Динамічно отримує модель користувача
         on_delete=models.SET_NULL,  # Якщо користувача видалено — поле стає NULL 
@@ -30,9 +33,13 @@ class Create_Bins(models.Model):
         verbose_name = "Bin"
         verbose_name_plural = "Bins"
 
-    #Повертає рядкове представлення об'єкта (назва або частина вмісту)
+    # Повертає рядкове представлення об'єкта (назва або частина вмісту)
     def __str__(self):
         return f"{self.title}"
+
+    def is_active(self):
+        return self.expiry_at is None or self.expiry_at > timezone.now()
+
 
 # Модель для збереження переглядів бінів
 class ViewBin(models.Model):

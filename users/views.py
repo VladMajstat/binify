@@ -2,8 +2,10 @@ from django.shortcuts import render
 from django.contrib import auth, messages
 from django.http import HttpResponseRedirect
 from django.urls import reverse
-from users.forms import UserLoginForm, UserRegistrationForm, ProfileForm
 from django.contrib.auth.decorators import login_required
+
+from users.forms import UserLoginForm, UserRegistrationForm, ProfileForm
+from bins.models import Create_Bins, BinLike
 
 def login(request):
     # Якщо запит POST — обробляємо дані форми
@@ -30,7 +32,7 @@ def login(request):
         'title': 'Авторизація - Binify',
         'form': form,
     }
-    return render(request, 'users/login.html', context)
+    return render(request, "users/login.html", context=context)
 
 def registration(request):
 
@@ -49,7 +51,7 @@ def registration(request):
         'title': 'Реєстрація - Binify',
         'form':form,
     }
-    return render(request, 'users/registration.html', context)
+    return render(request, "users/registration.html", context=context)
 
 @login_required
 def profile(request):
@@ -62,12 +64,18 @@ def profile(request):
             return HttpResponseRedirect(reverse('user:profile'))
     else:
         form = ProfileForm(instance=request.user)
+    
+    # Отримуємо всі біни, які користувач лайкнув (в вигляді списка)
+    liked_bin_ids = BinLike.objects.filter(user=request.user, is_like=True).values_list('bin_id', flat=True)
+    liked_bins = Create_Bins.objects.filter(id__in=liked_bin_ids).order_by('-created_at')
+    liked_bins = [bin for bin in liked_bins if bin.is_active()]
 
     context = {
         'title': 'Профіль - Binify',
         'form': form,
+        'liked_bins': liked_bins,
     }
-    return render(request, 'users/profile.html', context)
+    return render(request, "users/profile.html", context=context)
 
 @login_required
 def logout(request):

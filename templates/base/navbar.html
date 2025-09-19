@@ -39,7 +39,7 @@
             </a>
             <ul class="dropdown-menu dropdown-menu-end user-dropdown-dark-green" aria-labelledby="userDropdown">
               <li><a class="dropdown-item user-dropdown-green" href="{% url "bins:user_bins" %}">Мої Bin</a></li>
-              <li><a class="dropdown-item user-dropdown-green" href="#">Мої коментарі</a></li>
+              <li><a class="dropdown-item user-dropdown-green" href="{% url "bins:user_comments" %}">Мої коментарі</a></li>
               <li><a class="dropdown-item user-dropdown-green" href="{% url 'users:profile' %}">Мій профіль</a></li>
               {% if user.is_admin or user.is_staff %}
                 <li><a class="dropdown-item user-dropdown-green" href="{% url "admin:index" %}">Адмін панель</a></li>

@@ -1,34 +1,33 @@
 {% extends "base/base.html" %}
 {% block content %}
     <div class="container py-4">
-    <h2 class="mb-4"></h2>
-    {% for bin in bins %}
-        <div class="card bg-dark mb-3">
-        <div class="card-body">
-            <h4 class="card-title text-white">
-            <a href="{% url 'bins:view_bin' bin.id %}" class="text-white text-decoration-none fw-bold">
-                {{ bin.title }}
-            </a>
-            <span class="badge  {% if bin.access == 'public' %}bg-success{% else %}bg-secondary{% endif %} ms-2">
-                {{ bin.get_access_display }}
-            </span>
-            </h4>
-            <div class="mb-2">
-            <span class="badge btn-logo">{{ bin.get_language_display }}</span>
+        <h2 class="mb-4"></h2>
+        {% for bin in bins %}
+            <div class="card bg-dark mb-3">
+                <div class="card-body">
+                    <h4 class="card-title text-white">
+                        <a href="{% url 'bins:view_bin' bin.id %}" class="text-white text-decoration-none fw-bold">
+                            {{ bin.title }}
+                        </a>
+                        <span class="badge  {% if bin.access == 'public' %}bg-success{% else %}bg-secondary{% endif %} ms-2">
+                            {{ bin.get_access_display }}
+                        </span>
+                    </h4>
+                    <div class="d-flex align-items-center mb-2 gap-3">
+                        <span class="badge btn-logo">{{ bin.get_language_display }}</span>
+                        <span class="text-white small">Створено: {{ bin.created_at|date:"d.m.Y H:i" }}</span>
+                        <span class="text-white small">Термін дії:
+                            {% if bin.expiry_at %}
+                                {{ bin.expiry_at|date:"d.m.Y H:i" }}
+                            {% else %}
+                                Без обмежень
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
             </div>
-            <div class="text-white small">
-            Створено: {{ bin.created_at|date:"d.m.Y H:i" }}<br>
-            Термін дії: 
-            {% if bin.expiry_at %}
-                {{ bin.expiry_at|date:"d.m.Y H:i" }}
-            {% else %}
-                Без обмежень
-            {% endif %}
-            </div>
-        </div>
-        </div>
-    {% empty %}
-        <div class="text-white">У вас ще немає жодного Bin.</div>
-    {% endfor %}
+        {% empty %}
+            <div class="text-white">У вас ще немає жодного Bin.</div>
+        {% endfor %}
     </div>
 {% endblock %}

@@ -63,3 +63,15 @@ def fetch_bin_content_from_r2(file_key):
         return obj['Body'].read().decode('utf-8')
     except Exception as e:
         return f"Не вдалося отримати контент з R2: {e}"
+
+
+    # Повертає розмір файлу (біна) у байтах з Cloudflare R2 за file_key.
+def get_bin_size(file_key):
+
+    s3 = get_s3_client()
+    try:
+        obj = s3.head_object(Bucket=settings.AWS_STORAGE_BUCKET_NAME, Key=file_key)
+        return obj['ContentLength']
+    except Exception as e:
+        print(f"Не вдалося отримати розмір з R2: {e}")
+        return None

@@ -1,14 +1,15 @@
 from django.shortcuts import render
-from .forms import CreateBinsForm, BinCommentForm
 from django.shortcuts import redirect
-from .choices import CATEGORY_CHOICES, LANGUAGE_CHOICES, EXPIRY_CHOICES, ACCESS_CHOICES
 import uuid
-from .models import Create_Bins, BinLike, BinComment
 from django.contrib import messages
-from .utils import upload_to_r2, get_expiry_map, fetch_bin_content_from_r2
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 from django.template.loader import render_to_string
+
+from .choices import CATEGORY_CHOICES, LANGUAGE_CHOICES, EXPIRY_CHOICES, ACCESS_CHOICES
+from .models import Create_Bins, BinLike
+from .utils import upload_to_r2, get_expiry_map, fetch_bin_content_from_r2, get_bin_size
+from .forms import CreateBinsForm, BinCommentForm, BinComment
 
 
 # логіка для створення нового bin.
@@ -28,6 +29,8 @@ def create_bin(request):
                 expiry_at = get_expiry_map(data['expiry'])
                 # Додаємо ключ файлу (шлях у бакеті)
                 file_key = filename
+                #Отримуємо розмір Bin
+                size_bin = get_bin_size(file_key)
                 # Створюємо Bin у базі даних
                 Create_Bins.objects.create(
                     file_url=file_url,
@@ -40,6 +43,7 @@ def create_bin(request):
                     title=f"{request.user.username}/{data['title']}",
                     tags=data['tags'],
                     author=request.user,
+                    size_bin=size_bin,
                 )
                 messages.success(request, "Bin успішно створено!")
                 return redirect("main:index")
@@ -55,7 +59,7 @@ def create_bin(request):
         form = CreateBinsForm()
 
     # Передаємо форму та choices у шаблон для рендерингу
-    content = {
+    context = {
         "title": "Створити Bin — Binify",
         "content": "Створити новий Bin",
         "form": form,
@@ -64,11 +68,36 @@ def create_bin(request):
         "expiry_choices": EXPIRY_CHOICES,
         "access_choices": ACCESS_CHOICES,
     }
-    return render(request, "bins/create_bin.html", content)
+    return render(request, "bins/create_bin.html", context=context)
 
 # показує вміст конкретного bin за ідентифікатором або slug
 def view_bin(request, id):
+
     bin = get_object_or_404(Create_Bins, pk=id)
+
+    # --- Підрахунок переглядів ---
+    # 1. Отримуємо session_key для унікальності перегляду
+    session_key = request.session.session_key
+    if not session_key:
+        request.session.create()
+        session_key = request.session.session_key
+    # 2. Перевіряємо, чи вже був перегляд з цим session_key/user
+    already_viewed = bin.views.filter(session_key=session_key).exists()
+    # 3. Визначаємо користувача (авторизований чи ні)
+    user = request.user if request.user.is_authenticated else None
+    if user:
+        already_viewed = bin.views.filter(user=user).exists() or already_viewed
+    # 4. Якщо перегляд унікальний — додаємо запис у ViewBin
+    if not already_viewed:
+        bin.views.create(
+            user=user,  # Користувач (або None)
+            ip_address=request.META.get('REMOTE_ADDR', ''),  # IP-адреса
+            user_agent=request.META.get('HTTP_USER_AGENT', ''),  # User-Agent браузера
+            session_key=session_key  # Сесія для унікальності
+        )
+        # 5. Оновлюємо кількість переглядів у моделі Create_Bins
+        bin.views_count = bin.views.count()
+        bin.save(update_fields=["views_count"])
 
     # --- Отримання контенту з R2 ---
     bin_content = None
@@ -84,25 +113,37 @@ def view_bin(request, id):
     # Отримуємо всі коментарі для цього Bin
     comments = bin.comments.all().order_by('-created_at')
 
-    content = {
+    context = {
         "title": f"Перегляд Bin — {bin.title}",
         "content": "Перегляд існуючого Bin",
-        'bin': bin,
-        'bin_content': bin_content,
-        'comments': comments,  # Передаємо коментарі у шаблон
+        "bin": bin,
+        "bin_content": bin_content,
+        "comments": comments,  # Передаємо коментарі у шаблон
+        "views_count": bin.views_count,
     }
-    return render(request, "bins/view_bin.html", content)
+    return render(request, "bins/view_bin.html", context=context)
 
 def user_bins(request):
-    # Отримуємо всі біни, створені поточним користувачем
+    # Отримуємо всі біни поточного користувача
     bins = Create_Bins.objects.filter(author=request.user).order_by('-created_at')
-    
-    content = {
+    # Фільтруємо лише активні біни через метод is_active
+    bins = [bin for bin in bins if bin.is_active()]
+
+    context = {
         'title': 'Мої Bin',
         'bins': bins,
     }
-    return render(request, 'bins/user_bins.html', content)
+    return render(request, "bins/user_bins.html", context=context)
 
+
+def user_comments(request):
+    # Отримуємо всі коментарі, створені поточним користувачем
+    comments = BinComment.objects.filter(author=request.user).order_by("-created_at")
+    context = {
+        "title": "Мої коментарі",
+        "comments": comments,
+    }
+    return render(request, "bins/user_comments.html", context=context)
 
 # Повертає кількість лайків/дизлайків для біна (GET) або додає лайк/дизлайк (POST).
 def likes_dislikes_bins(request, id):

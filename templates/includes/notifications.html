@@ -12,21 +12,41 @@
     </div>
 {% endif %}
 
-<!-- Для оповещений -->
+<!-- Окремо для помилок створення біна -->
+{% if messages %}
+  <div class="container mt-4">
+    <div class="row justify-content-center">
+      <div class="col-md-6">
+        {% for message in messages %}
+          {% if 'bin_error' in message.tags %}
+            <div id="notification" class="alert alert-danger alert-dismissible fade show custom-shadow" role="alert">
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+{% endif %}
+
+<!-- Всі інші повідомлення для користувачів, крім bin_error -->
 <div class="container mt-4">
     <div class="row justify-content-center">
         <div class="col-md-6">
             {% if messages %}
                 {% for message in messages %}
-                    {% if message.tags == 'success' %}
-                    <div id="notification" class="position-fixed start-50 translate-middle-x z-3 alert alert-success fade show custom-shadow" role="alert">
-                        {{ message }}
-                    </div>
-                    {% endif %}
-                    {% if message.tags == 'warning' %}
-                    <div id="notification" class="position-fixed start-50 translate-middle-x z-3 alert alert-danger fade show custom-shadow" role="alert">
-                        {{ message }}
-                    </div>
+                    {% if 'bin_error' not in message.tags %}
+                        {% if message.tags == 'success' %}
+                        <div id="notification" class="position-fixed start-50 translate-middle-x z-3 alert alert-success fade show custom-shadow" role="alert">
+                            {{ message }}
+                        </div>
+                        {% endif %}
+                        {% if message.tags == 'warning' %}
+                        <div id="notification" class="position-fixed start-50 translate-middle-x z-3 alert alert-danger fade show custom-shadow" role="alert">
+                            {{ message }}
+                        </div>
+                        {% endif %}
                     {% endif %}
                 {% endfor %}
             {% else %}
@@ -36,18 +56,3 @@
         </div>
     </div>
 </div>
-
-{% comment %} {% if messages %}
-  <div class="container mt-4">
-    <div class="row justify-content-center">
-      <div class="col-md-6">
-        {% for message in messages %}
-          <div id="notification" class="alert alert-{{ message.tags }} alert-dismissible fade show custom-shadow" role="alert">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-          </div>
-        {% endfor %}
-      </div>
-    </div>
-  </div>
-{% endif %} {% endcomment %}

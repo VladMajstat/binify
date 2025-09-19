@@ -1,0 +1,43 @@
+{% extends "base/base.html" %}
+{% block content %}
+    <div class="container py-4">
+        <h2 class="mb-4">Мої коментарі</h2>
+        {% for comment in comments %}
+            {# Відображаємо картку біна, на який залишено коментар #}
+            <div class="card bg-dark mb-3">
+                <div class="card-body">
+                    {# Назва біна з посиланням #}
+                    <h4 class="card-title text-white">
+                        <a href="{% url 'bins:view_bin' comment.bin.id %}" class="text-white text-decoration-none fw-bold">
+                            {{ comment.bin.title }}
+                        </a>
+                        {# Відображаємо статус доступу біна #}
+                        <span class="badge {% if comment.bin.access == 'public' %}bg-success{% else %}bg-secondary{% endif %} ms-2">
+                            {{ comment.bin.get_access_display }}
+                        </span>
+                    </h4>
+                    {# Мова, дата створення і термін дії в одному рядку #}
+                    <div class="d-flex align-items-center mb-2 gap-3">
+                        <span class="badge btn-logo">{{ comment.bin.get_language_display }}</span>
+                        <span class="text-white small">Створено: {{ comment.bin.created_at|date:"d.m.Y H:i" }}</span>
+                        <span class="text-white small">Термін дії:
+                            {% if comment.bin.expiry_at %}
+                                {{ comment.bin.expiry_at|date:"d.m.Y H:i" }}
+                            {% else %}
+                                Без обмежень
+                            {% endif %}
+                        </span>
+                    </div>
+                    {# Відображаємо текст і дату коментаря #}
+                    <div class="text-white small">
+                        <b>Ваш коментар:</b> {{ comment.text }}<br>
+                        <span class="text-muted">({{ comment.created_at|date:"d.m.Y H:i" }})</span>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            {# Якщо коментарів немає #}
+            <div class="text-white">Ви ще не залишали жодного коментаря.</div>
+        {% endfor %}
+    </div>
+{% endblock %}

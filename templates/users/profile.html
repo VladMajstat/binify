@@ -77,7 +77,9 @@
                         <button type="submit" class="btn btn-dark">Зберегти</button>
                     </form>
                 </div>
-            </div>
+            </div>           <!-- Вподобані біни справа -->
+        <div class="col-md-7">
+            {% include "includes/user_liked_bins.html" with bins=liked_bins %}
         </div>
     </div>
 </div>

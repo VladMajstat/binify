@@ -5,13 +5,13 @@
     <div class="container py-4">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <div class="d-flex align-items-center">
-                <img src="{% if user.image %}{{ user.image.url }}{% else %}{% static 'deps/images/baseavatar.jpg' %}{% endif %}" alt="avatar" class="rounded-circle me-3" width="56" height="56">
+                <img src="{% if bin.author and bin.author.image %}{{ bin.author.image.url }}{% else %}{% static 'deps/images/baseavatar.jpg' %}{% endif %}" alt="avatar" class="rounded-circle me-3" width="56" height="56">
                 <div>
                     <h2 class="mb-0">{{ bin.title|default:"Без назви" }}</h2>
                     <div class="text-white small">
                         <a href="#" class="fw-bold text-decoration-none user-dropdown-green">@{{ bin.author.username|default:"Гість" }}</a>
                         &bull; {{ bin.created_at|date:"d.m.Y H:i" }}
-                        &bull; Переглядів: {{ views_count|default:"0" }}
+                        &bull; Переглядів: {{ bin.views_count|default:"0" }}
                         &bull; Час існування: {{ bin.created_at|timesince }} тому
                     </div>
                 </div>
@@ -33,7 +33,7 @@
         <!-- Інформація про код -->
         <div class="d-flex align-items-center mb-2">
             <span class="badge btn-logo me-2" style="border:2px solid #43e97b;color:#43e97b;background:#181c20;font-size:1em;padding:0.3em 0.8em;">{{ bin.get_language_display }}</span>
-            <span class="text-white me-2">Розмір: {{ bin.size|filesizeformat }}</span>
+            <span class="text-white me-2">Розмір: {{ bin.size_bin|filesizeformat }} B</span>
             <button class="btn btn-logo btn-sm me-2" style="font-size:1em;padding:0.2em 0.7em;" id="like-btn">👍 {{ bin.likes|default:"0" }}</button>
             <button class="btn btn-logo btn-sm me-2" style="font-size:1em;padding:0.2em 0.7em;" id="dislike-btn">👎 {{ bin.dislikes|default:"0" }}</button>
             <button class="btn btn-logo btn-sm me-2" style="font-size:1em;padding:0.2em 0.7em;" id="copy-btn">Копіювати</button>
