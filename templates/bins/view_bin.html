@@ -2,85 +2,82 @@
 {% load static %}
 
 {% block content %}
-    <div class="container py-4">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <div class="d-flex align-items-center">
-                <img src="{% if bin.author and bin.author.image %}{{ bin.author.image.url }}{% else %}{% static 'deps/images/baseavatar.jpg' %}{% endif %}" alt="avatar" class="rounded-circle me-3" width="56" height="56">
-                <div>
-                    <h2 class="mb-0">{{ bin.title|default:"Без назви" }}</h2>
-                    <div class="text-white small">
-                        <a href="#" class="fw-bold text-decoration-none user-dropdown-green">@{{ bin.author.username|default:"Гість" }}</a>
-                        &bull; {{ bin.created_at|date:"d.m.Y H:i" }}
-                        &bull; Переглядів: {{ bin.views_count|default:"0" }}
-                        &bull; Час існування: {{ bin.created_at|timesince }} тому
+<div class="container py-4">
+    <div class="row">
+        {% if request.user == bin.author %}
+            {% include "bins/author_view_bin.html" %}
+        {% else %}
+            <!-- Для неавтора: інформація про бін на всю ширину -->
+            <div class="col-md-12">
+                <div class="d-flex align-items-center mb-3">
+                    <img src="{% if bin.author and bin.author.image %}{{ bin.author.image.url }}{% else %}{% static 'deps/images/baseavatar.jpg' %}{% endif %}" alt="avatar" class="rounded-circle me-3" width="56" height="56">
+                    <div>
+                        <h2 class="mb-0">{{ bin.title|default:"Без назви" }}</h2>
+                        <div class="text-white small">
+                            <a href="#" class="fw-bold text-decoration-none user-dropdown-green">@{{ bin.author.username|default:"Гість" }}</a>
+                            &bull; {{ bin.created_at|date:"d.m.Y H:i" }}
+                            &bull; Переглядів: {{ bin.views_count|default:"0" }}
+                            &bull; Час існування: {{ bin.created_at|timesince }} тому
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center mb-2">
+                    <span class="badge btn-logo me-2" style="border:2px solid #43e97b;color:#43e97b;background:#181c20;font-size:1em;padding:0.3em 0.8em;">{{ bin.get_language_display }}</span>
+                    <span class="text-white me-2">Розмір: {{ bin.size_bin|filesizeformat }} B</span>
+                    <button class="btn btn-logo btn-sm me-2" style="font-size:1em;padding:0.2em 0.7em;" id="like-btn">👍 {{ bin.likes|default:"0" }}</button>
+                    <button class="btn btn-logo btn-sm me-2" style="font-size:1em;padding:0.2em 0.7em;" id="dislike-btn">👎 {{ bin.dislikes|default:"0" }}</button>
+                    <button class="btn btn-logo btn-sm me-2" style="font-size:1em;padding:0.2em 0.7em;" id="copy-btn">Копіювати</button>
+                    <button class="btn btn-logo btn-sm" style="font-size:1em;padding:0.2em 0.7em;" id="share-btn">URL</button>
+                </div>
+                <div class="code-block mb-3">
+                    <pre><code class="language-{{ bin.language|default:'plaintext' }}">{{ bin_content|escape }}</code></pre>
+                </div>
+                <div class="mb-3">
+                    <h5 class="mb-2">Коментарі</h5>
+                    <form method="post" action="#" class="d-flex mt-2" id="comment-form">
+                        {% csrf_token %}
+                        <input type="text" name="text" class="form-control me-2" placeholder="Залишити коментар..." required>
+                        <button type="submit" class="btn btn-logo">Додати</button>
+                    </form>
+                    <div id="comment-messages"></div>
+                    <div id="comments-list" class="mt-3">
+                        {% for comment in comments %}
+                            <div class="border rounded p-2 mb-2 card bg-dark">
+                                <b class="user-dropdown-green">{{ comment.author.username }}:</b>
+                                <span class="text-white small">{{ comment.text }}</span>
+                                <span class="text-white small">({{ comment.created_at|timesince }} тому)</span>
+                            </div>
+                        {% empty %}
+                            <div class="text-white">Коментарів ще немає.</div>
+                        {% endfor %}
                     </div>
                 </div>
             </div>
-            <div>
-                <!-- Можна додати меню для автора (редагувати/видалити) -->
-            </div>
-        </div>
-
-        <!-- Передаємо bin.id та CSRF-токен у JavaScript -->
-        <script>
-            window.BIN_ID = {{ bin.id }};
-            window.CSRF_TOKEN = '{{ csrf_token }}';
-        </script>
-        <script src="{% static 'deps/js/jquery/jquery-3.7.0.min.js' %}"></script>
-        <script src="{% static 'deps/js/AJAX/bin_comment.js' %}"></script>
-        <script src="{% static 'deps/js/AJAX/likes_dislikes.js' %}"></script>
-        
-        <!-- Інформація про код -->
-        <div class="d-flex align-items-center mb-2">
-            <span class="badge btn-logo me-2" style="border:2px solid #43e97b;color:#43e97b;background:#181c20;font-size:1em;padding:0.3em 0.8em;">{{ bin.get_language_display }}</span>
-            <span class="text-white me-2">Розмір: {{ bin.size_bin|filesizeformat }} B</span>
-            <button class="btn btn-logo btn-sm me-2" style="font-size:1em;padding:0.2em 0.7em;" id="like-btn">👍 {{ bin.likes|default:"0" }}</button>
-            <button class="btn btn-logo btn-sm me-2" style="font-size:1em;padding:0.2em 0.7em;" id="dislike-btn">👎 {{ bin.dislikes|default:"0" }}</button>
-            <button class="btn btn-logo btn-sm me-2" style="font-size:1em;padding:0.2em 0.7em;" id="copy-btn">Копіювати</button>
-            <button class="btn btn-logo btn-sm" style="font-size:1em;padding:0.2em 0.7em;" id="share-btn">URL</button>
-        </div>
-
-        <!-- Вміст біна -->
-        <div class="code-block mb-3">
-            <pre><code class="language-{{ bin.language|default:'plaintext' }}">{{ bin_content|linebreaksbr|escape }}</code></pre>
-        </div>
-    
-        <!-- Коментарі під кодом -->
-        <div class="mb-3">
-            <h5 class="mb-2">Коментарі</h5>
-            <form method="post" action="#" class="d-flex mt-2" id="comment-form">
-                {% csrf_token %}
-                <input type="text" name="text" class="form-control me-2" placeholder="Залишити коментар..." required>
-                <button type="submit" class="btn btn-logo">Додати</button>
-            </form>
-            <div id="comment-messages"></div>
-            <div id="comments-list" class="mt-3">
-                {% for comment in comments %}
-                    <div class="border rounded p-2 mb-2 card bg-dark">
-                        <b class="user-dropdown-green">{{ comment.author.username }}:</b>
-                        <span class="text-white small">{{ comment.text }}</span>
-                        <span class="text-white small">({{ comment.created_at|timesince }} тому)</span>
-                    </div>
-                {% empty %}
-                    <div class="text-white">Коментарів ще немає.</div>
-                {% endfor %}
-            </div>
-        </div>
+        {% endif %}
     </div>
+</div>
 
+<!-- Передаємо bin.id та CSRF-токен у JavaScript -->
+<script>
+    window.BIN_ID = {{ bin.id }};
+    window.CSRF_TOKEN = '{{ csrf_token }}';
+</script>
+<script src="{% static 'deps/js/jquery/jquery-3.7.0.min.js' %}"></script>
+<script src="{% static 'deps/js/AJAX/bin_comment.js' %}"></script>
+<script src="{% static 'deps/js/AJAX/likes_dislikes.js' %}"></script>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('copy-btn').onclick = function() {
-                navigator.clipboard.writeText(`{{ bin.content|escapejs }}`);
-                this.innerText = "Скопійовано!";
-                setTimeout(() => this.innerText = "Копіювати", 1500);
-            }
-            document.getElementById('share-btn').onclick = function() {
-                navigator.clipboard.writeText(window.location.href);
-                this.innerText = "URL скопійовано!";
-                setTimeout(() => this.innerText = "URL", 1500);
-            }
-        });
-    </script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('copy-btn').onclick = function() {
+            navigator.clipboard.writeText(`{{ bin.content|escapejs }}`);
+            this.innerText = "Скопійовано!";
+            setTimeout(() => this.innerText = "Копіювати", 1500);
+        }
+        document.getElementById('share-btn').onclick = function() {
+            navigator.clipboard.writeText(window.location.href);
+            this.innerText = "URL скопійовано!";
+            setTimeout(() => this.innerText = "URL", 1500);
+        }
+    });
+</script>
 {% endblock %}

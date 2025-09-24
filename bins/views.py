@@ -8,7 +8,12 @@ from django.template.loader import render_to_string
 
 from .choices import CATEGORY_CHOICES, LANGUAGE_CHOICES, EXPIRY_CHOICES, ACCESS_CHOICES
 from .models import Create_Bins, BinLike
-from .utils import fetch_bin_content_from_r2, create_bin_from_data
+from .utils import (
+    upload_to_r2,
+    create_bin_from_data,
+    delete_from_r2,
+    get_bin_content,
+)
 from .forms import CreateBinsForm, BinCommentForm, BinComment
 
 def create_bin(request):
@@ -72,26 +77,23 @@ def view_bin(request, id):
         bin.save(update_fields=["views_count"])
 
     # --- Отримання контенту з R2 ---
-    bin_content = None
-    if bin.file_url:
-        try:
-            bin_content = fetch_bin_content_from_r2(bin.file_key)
-        except Exception as e:
-            bin_content = "Не вдалося отримати контент з R2."
-            print(f"Помилка: {e}")
-    else:
-        bin_content = "Контент не знайдено."
-
+    bin_content = get_bin_content(bin)
     # Отримуємо всі коментарі для цього Bin
     comments = bin.comments.all().order_by('-created_at')
+    form = CreateBinsForm(instance=bin)
 
     context = {
         "title": f"Перегляд Bin — {bin.title}",
         "content": "Перегляд існуючого Bin",
         "bin": bin,
+        'form': form,
         "bin_content": bin_content,
         "comments": comments,  # Передаємо коментарі у шаблон
         "views_count": bin.views_count,
+        "category_choices": CATEGORY_CHOICES,
+        "language_choices": LANGUAGE_CHOICES,
+        "expiry_choices": EXPIRY_CHOICES,
+        "access_choices": ACCESS_CHOICES,
     }
     return render(request, "bins/view_bin.html", context=context)
 
@@ -173,22 +175,50 @@ def bin_comment(request, id):
             return JsonResponse({'success': False, 'error': error})
     return JsonResponse({'success': False, 'error': 'Invalid request'})
 
+def edit_bin(request, id):
+    bin = get_object_or_404(Create_Bins, pk=id, author=request.user)
+    # Отримуємо поточний контент з R2 для відображення у формі
+    bin_content = get_bin_content(bin)
 
-# дозволяє автору змінити вміст bin.
-# def edit_bin(request):
-#     context = {
-#         "title": "Редагувати Bin — Binify",
-#         "content": "Редагувати існуючий Bin",
-#     }
-#     return render(request, "bins/edit_bin.html", context)
+    if request.method == "POST":
+        form = CreateBinsForm(request.POST, instance=bin)
+        if form.is_valid():
+            # Перевіряємо, чи змінився контент
+            new_content = form.cleaned_data.get("content")
+            if new_content and new_content != bin_content:
+                # Оновлюємо контент у R2
+                upload_to_r2(bin.file_key, new_content)
+            form.save()
+            messages.success(request, "Bin успішно оновлено!")
+            return redirect("bins:view_bin", id=bin.id)
+        else:
+            messages.error(request, "❗ Дані форми некоректні. Перевірте введене!")
+    else:
+        # Передаємо поточний контент у форму для відображення
+        form = CreateBinsForm(instance=bin, initial={"content": bin_content})
 
-# дозволяє видалити bin.
-# def delete_bin(request):
-#     context = {
-#         "title": "Видалити Bin — Binify",
-#         "content": "Видалити існуючий Bin",
-#     }
-#     return render(request, "bins/delete_bin.html", context)
+    context = {
+        "bin": bin,
+        "form": form,
+        "bin_content": bin_content,
+        "category_choices": CATEGORY_CHOICES,
+        "language_choices": LANGUAGE_CHOICES,
+        "expiry_choices": EXPIRY_CHOICES,
+        "access_choices": ACCESS_CHOICES,
+    }
+
+    return render(request, "bins/view_bin.html", context=context)
+
+def delete_bin(request, id):
+    bin = get_object_or_404(Create_Bins, pk=id, author=request.user)
+    if request.method == "POST":
+        # Видалити файл з R2
+        delete_from_r2(bin.file_key)
+        # Видалити бін з бази
+        bin.delete()
+        messages.success(request, "Bin успішно видалено!")
+        return redirect("bins:view_bin")
+    return redirect("bins:view_bin", id=bin.id)
 
 
 # дозволяє шукати bin за ключовими словами або тегами.

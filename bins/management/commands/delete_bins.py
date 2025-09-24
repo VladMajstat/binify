@@ -44,7 +44,3 @@ class Command(BaseCommand):
             self.style.SUCCESS(f"Видалено {count} прострочених bin і їх файли")
         )
 
-
-# Create_Bins.objects.filter(
-#     models.Q(expiry_at__isnull=True) | models.Q(expiry_at__gt=timezone.now())
-# )
