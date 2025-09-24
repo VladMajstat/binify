@@ -155,3 +155,6 @@ body {
   white-space: pre-wrap;
   word-break: break-word;
 }
+.alert.notification {
+  text-align: center;
+}

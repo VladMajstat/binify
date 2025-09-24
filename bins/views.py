@@ -1,6 +1,5 @@
 from django.shortcuts import render
 from django.shortcuts import redirect
-import uuid
 from django.contrib import messages
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
@@ -88,7 +87,7 @@ def view_bin(request, id):
         "bin": bin,
         'form': form,
         "bin_content": bin_content,
-        "comments": comments,  # Передаємо коментарі у шаблон
+        "comments": comments,
         "views_count": bin.views_count,
         "category_choices": CATEGORY_CHOICES,
         "language_choices": LANGUAGE_CHOICES,

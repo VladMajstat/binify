@@ -80,32 +80,6 @@ def get_expiry_map(expiry):
 
     return expiry_at
 
-
-#     # Отримує контент файлу з Cloudflare R2 через boto3 (для приватних бакетів).
-# def fetch_bin_content_from_r2(file_key):
-
-#     s3 = get_s3_client()
-#     try:
-#         obj = s3.get_object(Bucket=settings.AWS_STORAGE_BUCKET_NAME, Key=file_key)
-#         return obj['Body'].read().decode('utf-8')
-#     except Exception as e:
-#         return f"Не вдалося отримати контент з R2: {e}"
-
-
-# def get_bin_content(bin_obj):
-#     """
-#     Повертає контент біна або повідомлення про помилку.
-#     """
-#     if bin_obj.file_url:
-#         try:
-#             return fetch_bin_content_from_r2(bin_obj.file_key)
-#         except Exception as e:
-#             print(f"Помилка: {e}")
-#             return "Не вдалося отримати контент з R2."
-#     else:
-#         return "Контент не знайдено."
-
-
 def get_bin_content(bin_or_file_key, default="Контент не знайдено."):
     """
     Повертає контент біна з R2.

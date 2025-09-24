@@ -14,6 +14,7 @@
             </div>
         </div>
     </div>
+    <pre id="bin-content" style="display:none;">{{ bin_content|escape }}</pre>
     <div class="d-flex align-items-center mb-2">
         <span class="badge btn-logo me-2" style="border:2px solid #43e97b;color:#43e97b;background:#181c20;font-size:1em;padding:0.3em 0.8em;">{{ bin.get_language_display }}</span>
         <span class="text-white me-2">Розмір: {{ bin.size_bin|filesizeformat }} B</span>

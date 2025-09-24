@@ -21,12 +21,13 @@
                         </div>
                     </div>
                 </div>
+                <pre id="bin-content" style="display:none;">{{ bin_content|escape }}</pre>
                 <div class="d-flex align-items-center mb-2">
                     <span class="badge btn-logo me-2" style="border:2px solid #43e97b;color:#43e97b;background:#181c20;font-size:1em;padding:0.3em 0.8em;">{{ bin.get_language_display }}</span>
-                    <span class="text-white me-2">Розмір: {{ bin.size_bin|filesizeformat }} B</span>
+                    <span class="text-white me-2">Розмір: {{ bin.size_bin|filesizeformat }}</span>
                     <button class="btn btn-logo btn-sm me-2" style="font-size:1em;padding:0.2em 0.7em;" id="like-btn">👍 {{ bin.likes|default:"0" }}</button>
                     <button class="btn btn-logo btn-sm me-2" style="font-size:1em;padding:0.2em 0.7em;" id="dislike-btn">👎 {{ bin.dislikes|default:"0" }}</button>
-                    <button class="btn btn-logo btn-sm me-2" style="font-size:1em;padding:0.2em 0.7em;" id="copy-btn">Копіювати</button>
+                    <button class="btn btn-logo btn-sm me-2"  id="copy-btn">Копіювати</button>
                     <button class="btn btn-logo btn-sm" style="font-size:1em;padding:0.2em 0.7em;" id="share-btn">URL</button>
                 </div>
                 <div class="code-block mb-3">
@@ -65,19 +66,5 @@
 <script src="{% static 'deps/js/jquery/jquery-3.7.0.min.js' %}"></script>
 <script src="{% static 'deps/js/AJAX/bin_comment.js' %}"></script>
 <script src="{% static 'deps/js/AJAX/likes_dislikes.js' %}"></script>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        document.getElementById('copy-btn').onclick = function() {
-            navigator.clipboard.writeText(`{{ bin.content|escapejs }}`);
-            this.innerText = "Скопійовано!";
-            setTimeout(() => this.innerText = "Копіювати", 1500);
-        }
-        document.getElementById('share-btn').onclick = function() {
-            navigator.clipboard.writeText(window.location.href);
-            this.innerText = "URL скопійовано!";
-            setTimeout(() => this.innerText = "URL", 1500);
-        }
-    });
-</script>
+<script src="{% static 'deps/js/copy_and_url.js' %}"></script>
 {% endblock %}
