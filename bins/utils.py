@@ -5,6 +5,7 @@ from datetime import timedelta
 from django.utils import timezone
 
 from bins.models import Create_Bins
+from django.db.models import Q
 
 def create_bin_from_data(request, data):
     try:
@@ -124,3 +125,21 @@ def delete_from_r2(file_key):
     except Exception as e:
         print(f"Помилка при видаленні з R2: {e}")
         return False
+
+def q_search(query):
+    """
+    Пошук бінів за назвою, тегами або контентом.
+    Повертає QuerySet з результатами пошуку.
+    """
+
+    if not query:
+        return Create_Bins.objects.none()
+
+    # Пошук за назвою або контентом (використовуючи __icontains для нечутливого до регістру пошуку)
+    results = Create_Bins.objects.filter(
+        Q(title__icontains=query)
+        | Q(category__icontains=query)
+        | Q(language__icontains=query)
+    ).distinct()
+
+    return results

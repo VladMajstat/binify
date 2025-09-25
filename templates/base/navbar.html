@@ -18,9 +18,12 @@
       <ul class="navbar-nav ms-auto align-items-center">
         <li class="nav-item">
           {% comment %} Пошук {% endcomment %}
-          <form class="d-flex" method="get" action="#">
+          <form class="d-flex" role="search" method="get" action="{% url 'main:index' %}">
             <div class="position-relative me-3" style="width: 220px;">
-              <input class="form-control rounded-pill ps-4" type="search" placeholder="Пошук" aria-label="Пошук" name="q" style="border-radius:2rem;" oninput="document.getElementById('search-icon').style.display = this.value ? 'none' : 'inline';">
+              <input class="form-control rounded-pill ps-4" 
+              type="search" placeholder="Search" aria-label="Search" 
+              name="q" style="border-radius:2rem;" 
+              oninput="document.getElementById('search-icon').style.display = this.value ? 'none' : 'inline';">
               <span class="position-absolute top-50 end-0 translate-middle-y pe-3" style="pointer-events:none;" id="search-icon">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="#888" viewBox="0 0 16 16">
                   <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85zm-5.442 1.398a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z"/>

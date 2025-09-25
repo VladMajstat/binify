@@ -158,3 +158,13 @@ body {
 .alert.notification {
   text-align: center;
 }
+
+.badge.bin-category {
+  max-width: 200px;
+  /* фіксована ширина для всіх категорій */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
+  vertical-align: middle;
+}

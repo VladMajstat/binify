@@ -12,6 +12,7 @@ from .utils import (
     create_bin_from_data,
     delete_from_r2,
     get_bin_content,
+    q_search
 )
 from .forms import CreateBinsForm, BinCommentForm, BinComment
 
@@ -34,6 +35,11 @@ def create_bin(request):
             messages.error(request, "❗ Дані форми некоректні. Перевірте введене!")
     else:
         form = CreateBinsForm()
+    
+    # query = request.GET.get('q', None)
+
+    # results = q_search(query)
+
 
     context = {
         "title": "Створити Bin — Binify",
@@ -43,6 +49,7 @@ def create_bin(request):
         "language_choices": LANGUAGE_CHOICES,
         "expiry_choices": EXPIRY_CHOICES,
         "access_choices": ACCESS_CHOICES,
+        # 'results': results,
     }
     return render(request, "bins/create_bin.html", context=context)
 
