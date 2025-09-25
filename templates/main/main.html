@@ -1,5 +1,6 @@
 {% extends "base/base.html" %}
 {% block content %}
+    <!-- Заголовок і кнопка створення нового Bin -->
     <div class="text-center mb-4">
         <h1>Binify</h1>
         <p class="lead">{{ content }}</p>
@@ -7,9 +8,11 @@
     </div>
     <h3>{{ last_bin }}</h3>
     <div class="row">
+        <!-- Якщо був пошук, показати повідомлення -->
         {% if search_message %}
             <div class="alert alert-info text-center mb-3">{{ search_message }}</div>
         {% endif %}
+        <!-- Вивід кожного біна у вигляді картки -->
         {% for bin in bins %}
             <div class="col-md-6 col-lg-4 mb-3">
                 <div class="card bg-dark text-light h-100" style="border: 2px solid #43e97b;">
@@ -36,4 +39,12 @@
             <p>{{ 0_bins }}</p>
         {% endfor %}
     </div>
+    <!-- Кнопка для завантаження наступної сторінки бінів -->
+    {% if show_more %}
+        <div class="text-center my-4">
+            <a href="?{% if query %}q={{ query }}&{% endif %}page={{ next_page }}" class="btn btn-success btn-lg">
+                Показати ще Bins
+            </a>
+        </div>
+    {% endif %}
 {% endblock %}
