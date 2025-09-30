@@ -3,7 +3,7 @@ $(document).ready(function () {
         e.preventDefault();
         console.log('AJAX submit!');
         $.ajax({
-            url: "/bins/bin_comment/" + window.BIN_ID + "/",
+            url: "/bins/bin_comment/" + window.BIN_HASH + "/",
             type: "POST",
             data: $(this).serialize(),
             headers: { "X-CSRFToken": window.CSRF_TOKEN },

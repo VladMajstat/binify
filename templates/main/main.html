@@ -18,7 +18,7 @@
                 <div class="card bg-dark text-light h-100" style="border: 2px solid #43e97b;">
                     <div class="card-body">
                         <h5 class="card-title">
-                            <a href="{% url 'bins:view_bin' bin.id %}" class="link-light">{{ bin.title }}</a>
+                            <a href="{% url 'bins:view_bin' bin.hash %}" class="link-light">{{ bin.title }}</a>
                         </h5>
                         <div class="d-flex align-items-center mb-2 gap-3">
                             <span class="badge btn-logo" style="border:2px solid #43e97b;color:#43e97b;background:#181c20;">

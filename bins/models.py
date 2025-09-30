@@ -27,6 +27,7 @@ class Create_Bins(models.Model):
     likes_count = models.PositiveIntegerField(default=0, verbose_name="Кількість лайків")
     dislikes_count = models.PositiveIntegerField(default=0, verbose_name="Кількість дизлайків")
     views_count = models.PositiveIntegerField(default=0, verbose_name="Кількість переглядів")
+    hash = models.CharField(max_length=64, unique=True, blank=True, null=True, verbose_name="Hash", help_text="SHA-256 хеш вмісту для унікальності")
 
     class Meta:
         db_table = 'create_bin'

@@ -61,7 +61,7 @@
 
 <!-- Передаємо bin.id та CSRF-токен у JavaScript -->
 <script>
-    window.BIN_ID = {{ bin.id }};
+    window.BIN_HASH = '{{ bin.hash }}';
     window.CSRF_TOKEN = '{{ csrf_token }}';
 </script>
 <script src="{% static 'deps/js/jquery/jquery-3.7.0.min.js' %}"></script>

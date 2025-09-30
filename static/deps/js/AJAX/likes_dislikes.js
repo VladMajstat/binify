@@ -1,12 +1,12 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // Отримуємо id біна та CSRF-токен з window
-    const binId = window.BIN_ID;
+    // Отримуємо hash біна та CSRF-токен з window
+    const binHash = window.BIN_HASH;
     const csrfToken = window.CSRF_TOKEN;
 
     // Функція для отримання та оновлення лічильників лайків/дизлайків
     function updateLikesDislikes() {
         // GET-запит на сервер для отримання поточних значень
-        fetch(`/bins/bin_likes_dislikes/${binId}/`)
+        fetch(`/bins/bin_likes_dislikes/${binHash}/`)
             .then(response => response.json())
             .then(data => {
                 // Оновлюємо текст кнопок лайк/дизлайк
@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Обробник кліку на кнопку лайк
     document.getElementById('like-btn').onclick = function() {
         // POST-запит на сервер для додавання/оновлення лайка
-        fetch(`/bins/bin_likes_dislikes/${binId}/`, {
+        fetch(`/bins/bin_likes_dislikes/${binHash}/`, {
             method: 'POST',
             headers: {'X-CSRFToken': csrfToken},
             body: new URLSearchParams({'is_like': 'true'})
@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Обробник кліку на кнопку дизлайк
     document.getElementById('dislike-btn').onclick = function() {
         // POST-запит на сервер для додавання/оновлення дизлайка
-        fetch(`/bins/bin_likes_dislikes/${binId}/`, {
+        fetch(`/bins/bin_likes_dislikes/${binHash}/`, {
             method: 'POST',
             headers: {'X-CSRFToken': csrfToken},
             body: new URLSearchParams({'is_like': 'false'})

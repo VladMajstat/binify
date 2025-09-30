@@ -8,7 +8,7 @@
                 <div class="card-body">
                     {# Назва біна з посиланням #}
                     <h4 class="card-title text-white">
-                        <a href="{% url 'bins:view_bin' comment.bin.id %}" class="text-white text-decoration-none fw-bold">
+                        <a href="{% url 'bins:view_bin' comment.bin.hash %}" class="text-white text-decoration-none fw-bold">
                             {{ comment.bin.title }}
                         </a>
                         {# Відображаємо статус доступу біна #}

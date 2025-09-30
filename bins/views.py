@@ -47,9 +47,9 @@ def create_bin(request):
     return render(request, "bins/create_bin.html", context=context)
 
 # показує вміст конкретного bin за ідентифікатором або slug
-def view_bin(request, id):
+def view_bin(request, hash):
 
-    bin = get_object_or_404(Create_Bins, pk=id)
+    bin = get_object_or_404(Create_Bins, hash=hash)
 
     # --- Підрахунок переглядів ---
     # 1. Отримуємо session_key для унікальності перегляду
@@ -119,9 +119,9 @@ def user_comments(request):
     return render(request, "bins/user_comments.html", context=context)
 
 # Повертає кількість лайків/дизлайків для біна (GET) або додає лайк/дизлайк (POST).
-def likes_dislikes_bins(request, id):
+def likes_dislikes_bins(request, hash):
     # Отримуємо бін за id
-    bin = get_object_or_404(Create_Bins, pk=id)
+    bin = get_object_or_404(Create_Bins, hash=hash)
     # Визначаємо користувача (або None для анонімного)
     user = request.user if request.user.is_authenticated else None
 
@@ -148,9 +148,9 @@ def likes_dislikes_bins(request, id):
     return JsonResponse({'likes': likes, 'dislikes': dislikes})
 
 
-def bin_comment(request, id):
+def bin_comment(request, hash):
     # Отримуємо Bin за id (перевіряємо, чи існує)
-    bin = get_object_or_404(Create_Bins, pk=id)
+    bin = get_object_or_404(Create_Bins, hash=hash)
     if request.method == "POST":
         # Створюємо форму коментаря з POST-даних
         form = BinCommentForm(request.POST)
@@ -174,8 +174,8 @@ def bin_comment(request, id):
             return JsonResponse({'success': False, 'error': error})
     return JsonResponse({'success': False, 'error': 'Invalid request'})
 
-def edit_bin(request, id):
-    bin = get_object_or_404(Create_Bins, pk=id, author=request.user)
+def edit_bin(request, hash):
+    bin = get_object_or_404(Create_Bins, hash=hash, author=request.user)
     # Отримуємо поточний контент з R2 для відображення у формі
     bin_content = get_bin_content(bin)
 
@@ -189,7 +189,7 @@ def edit_bin(request, id):
                 upload_to_r2(bin.file_key, new_content)
             form.save()
             messages.success(request, "Bin успішно оновлено!")
-            return redirect("bins:view_bin", id=bin.id)
+            return redirect("bins:view_bin", hash=bin.hash)
         else:
             messages.error(request, "❗ Дані форми некоректні. Перевірте введене!")
     else:
@@ -208,8 +208,8 @@ def edit_bin(request, id):
 
     return render(request, "bins/view_bin.html", context=context)
 
-def delete_bin(request, id):
-    bin = get_object_or_404(Create_Bins, pk=id, author=request.user)
+def delete_bin(request, hash):
+    bin = get_object_or_404(Create_Bins, hash=hash, author=request.user)
     if request.method == "POST":
         # Видалити файл з R2
         delete_from_r2(bin.file_key)
@@ -217,5 +217,4 @@ def delete_bin(request, id):
         bin.delete()
         messages.success(request, "Bin успішно видалено!")
         return redirect("bins:view_bin")
-    return redirect("bins:view_bin", id=bin.id)
-
+    return redirect("bins:view_bin", hash=bin.hash)

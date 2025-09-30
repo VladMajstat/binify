@@ -3,6 +3,7 @@ import uuid
 from django.conf import settings
 from datetime import timedelta
 from django.utils import timezone
+import requests
 
 from .models import Create_Bins
 from django.db.models import Q
@@ -14,7 +15,8 @@ def create_bin_from_data(request, data):
         expiry_at = get_expiry_map(data["expiry"])
         file_key = filename
         size_bin = get_bin_size(file_key)
-        Create_Bins.objects.create(
+
+        bin_obj = Create_Bins.objects.create(
             file_url=file_url,
             file_key=file_key,
             category=data["category"],
@@ -27,6 +29,15 @@ def create_bin_from_data(request, data):
             author=request.user,
             size_bin=size_bin,
         )
+
+        # Отримуємо хеш через FastAPI-сервіс
+        response = requests.get(f"http://127.0.0.1:8001/get_hash/", params={"id": bin_obj.id})
+        hash_value = response.json().get("hash", "")
+
+        # Зберігаємо хеш у бін
+        bin_obj.hash = hash_value
+        bin_obj.save(update_fields=["hash"])
+
         return True
     except Exception as e:
         print(f"Помилка при створенні bin: {e}")
@@ -143,4 +154,3 @@ def q_search(query):
     ).distinct()
 
     return results
-

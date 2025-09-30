@@ -1,7 +1,7 @@
 # from django.http import HttpResponse
 from django.shortcuts import render
 from bins.models import Create_Bins
-from bins.views import q_search
+from bins.utils import q_search
 from django.core.paginator import Paginator
 
 
