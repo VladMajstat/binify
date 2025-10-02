@@ -3,7 +3,8 @@ import uuid
 from django.conf import settings
 from datetime import timedelta
 from django.utils import timezone
-import requests
+import redis
+
 
 from .models import Create_Bins
 from django.db.models import Q
@@ -30,13 +31,25 @@ def create_bin_from_data(request, data):
             size_bin=size_bin,
         )
 
-        # Отримуємо хеш через FastAPI-сервіс
-        response = requests.get(f"http://127.0.0.1:8001/get_hash/", params={"id": bin_obj.id})
-        hash_value = response.json().get("hash", "")
+        redis_client = redis.Redis(host="localhost", port=6379)
 
-        # Зберігаємо хеш у бін
-        bin_obj.hash = hash_value
-        bin_obj.save(update_fields=["hash"])
+        # Отримуємо хеш напряму з Redis
+        hash_value = redis_client.lpop("my_unique_hash_pool")
+
+        if hash_value:
+            hash_value_str = hash_value.decode("utf-8")
+            try:
+                # ...логіка створення біна з hash_value_str...
+                bin_obj.hash = hash_value_str
+                bin_obj.save(update_fields=["hash"])
+            except Exception as e:
+                # Якщо сталася помилка — повертаємо хеш назад у пул
+                redis_client.lpush("my_unique_hash_pool", hash_value)
+                print("Помилка при створенні біна:", e)
+                return False
+        else:
+            print("Хеш не отримано з Redis!")
+            return False
 
         return True
     except Exception as e:

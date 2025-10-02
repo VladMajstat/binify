@@ -4,6 +4,8 @@ from django.contrib import messages
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 from django.template.loader import render_to_string
+import redis
+import json
 
 from .choices import CATEGORY_CHOICES, LANGUAGE_CHOICES, EXPIRY_CHOICES, ACCESS_CHOICES
 from .models import Create_Bins, BinLike
@@ -14,6 +16,7 @@ from .utils import (
     get_bin_content,
 )
 from .forms import CreateBinsForm, BinCommentForm, BinComment
+from hash_generator.fake_models.py import FakeBin, FakeUser
 
 def create_bin(request):
     if request.method == "POST":
@@ -49,7 +52,29 @@ def create_bin(request):
 # показує вміст конкретного bin за ідентифікатором або slug
 def view_bin(request, hash):
 
-    bin = get_object_or_404(Create_Bins, hash=hash)
+    redis_cache = redis.Redis(host="localhost", port=6379)
+
+    # --- Кешування метаданих ---
+    meta_key = f"bin_meta:{hash}"
+    meta = redis_cache.get(meta_key)
+    bin = None
+
+    if meta:
+        meta = json.loads(meta)
+
+        # Створюємо "фейковий" об'єкт для шаблону, якщо потрібно
+        class FakeBin:
+            pass
+
+        bin = FakeBin()
+        bin.title = meta["title"]
+        bin.author = type("FakeUser", (), {"username": meta["author"]})()
+        bin.created_at = meta["created_at"]
+        bin.views_count = meta["views_count"]
+        bin.hash = hash
+        # Додай інші потрібні поля, якщо вони використовуються у шаблоні
+    else:
+        bin = get_object_or_404(Create_Bins, hash=hash)
 
     # --- Підрахунок переглядів ---
     # 1. Отримуємо session_key для унікальності перегляду
@@ -75,6 +100,30 @@ def view_bin(request, hash):
         bin.views_count = bin.views.count()
         bin.save(update_fields=["views_count"])
 
+    # --- Кешування контенту ---
+    content_key = f"bin_content:{hash}"
+    bin_content = redis_cache.get(content_key)
+    if bin_content:
+        bin_content = bin_content.decode("utf-8")
+    else:
+        bin_content = get_bin_content(bin)
+        # Кешуємо тільки якщо бін популярний
+        if hasattr(bin, "views_count") and bin.views_count >= 50:
+            redis_cache.setex(
+                meta_key,
+                3600,
+                json.dumps(
+                    {
+                        "title": bin.title,
+                        "author": bin.author.username,
+                        "created_at": str(bin.created_at),
+                        "views_count": bin.views_count,
+                        # додай інші потрібні поля
+                    }
+                ),
+            )
+            redis_cache.setex(content_key, 600, bin_content)
+
     # --- Отримання контенту з R2 ---
     bin_content = get_bin_content(bin)
     # Отримуємо всі коментарі для цього Bin
@@ -88,7 +137,7 @@ def view_bin(request, hash):
         'form': form,
         "bin_content": bin_content,
         "comments": comments,
-        "views_count": bin.views_count,
+        "views_count": bin.views_count if hasattr(bin, "views_count") else 0,
         "category_choices": CATEGORY_CHOICES,
         "language_choices": LANGUAGE_CHOICES,
         "expiry_choices": EXPIRY_CHOICES,
@@ -216,5 +265,5 @@ def delete_bin(request, hash):
         # Видалити бін з бази
         bin.delete()
         messages.success(request, "Bin успішно видалено!")
-        return redirect("bins:view_bin")
+        return redirect("bins:user_bins")
     return redirect("bins:view_bin", hash=bin.hash)
