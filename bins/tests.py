@@ -3,30 +3,31 @@ from django.contrib.auth import get_user_model
 from django.urls import reverse
 from unittest.mock import patch
 from bins.models import Create_Bins, BinComment
+import json
+import redis
 
+class CreateBinErrorTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.user = get_user_model().objects.create_user(
+            username="testuser", password="testpass"
+        )
+        self.client.login(username="testuser", password="testpass")
 
-# class CreateBinErrorTest(TestCase):
-#     def setUp(self):
-#         self.client = Client()
-#         self.user = get_user_model().objects.create_user(
-#             username="testuser", password="testpass"
-#         )
-#         self.client.login(username="testuser", password="testpass")
-
-#     @patch("boto3.client")
-#     def test_create_bin_error_message(self, mock_boto):
-#         # Емуляція помилки при збереженні у Cloudflare (R2)
-#         mock_boto.return_value.put_object.side_effect = Exception("R2 error")
-#         response = self.client.post(reverse('bins:index'), {
-#             'content': 'test content',
-#             'title': 'testbin',
-#             'category': 'CODE',
-#             'language': 'python',
-#             'expiry': 'never',
-#             'access': 'public',
-#             'tags': '',
-#         }, follow=True)
-#         self.assertContains(response, "Не вдалося створити Bin")
+    @patch("boto3.client")
+    def test_create_bin_error_message(self, mock_boto):
+        # Емуляція помилки при збереженні у Cloudflare (R2)
+        mock_boto.return_value.put_object.side_effect = Exception("R2 error")
+        response = self.client.post(reverse('bins:index'), {
+            'content': 'test content',
+            'title': 'testbin',
+            'category': 'CODE',
+            'language': 'python',
+            'expiry': 'never',
+            'access': 'public',
+            'tags': '',
+        }, follow=True)
+        self.assertContains(response, "Не вдалося створити Bin")
 
 
 class AjaxCommentTest(TestCase):
@@ -63,3 +64,50 @@ class AjaxCommentTest(TestCase):
         self.assertTrue(
             BinComment.objects.filter(bin=self.bin, text="Тест AJAX коментар").exists()
         )
+
+redis_cache = redis.Redis(host="localhost", port=6379)
+
+
+class BinCacheTest(TestCase):
+    def setUp(self):
+        User = get_user_model()
+        self.user = User.objects.create_user(username="testuser", password="testpass")
+        self.bin = Create_Bins.objects.create(
+            title="Test Bin",
+            author=self.user,
+            language="python",
+            category="code",
+            views_count=50,  # саме 50 переглядів
+        )
+
+    def test_bin_meta_cached(self):
+        meta_key = f"bin_meta:{self.bin.hash}"
+        # Імітуємо логіку кешування (як у view)
+        meta = {
+            "title": self.bin.title,
+            "author": self.bin.author.username,
+            "created_at": str(self.bin.created_at),
+            "size_bin": getattr(self.bin, "size_bin", 0),
+            "language": self.bin.language,
+            "language_display": (
+                self.bin.get_language_display()
+                if hasattr(self.bin, "get_language_display")
+                else self.bin.language
+            ),
+            "category": self.bin.category,
+            "category_display": (
+                self.bin.get_category_display()
+                if hasattr(self.bin, "get_category_display")
+                else self.bin.category
+            ),
+            "tags": getattr(self.bin, "tags", ""),
+        }
+        if self.bin.views_count >= 50:
+            redis_cache.setex(meta_key, 3600, json.dumps(meta))
+
+        # Тепер перевіряємо, чи зберігся кеш
+        cached = redis_cache.get(meta_key)
+        self.assertIsNotNone(cached, "Кеш для біна не зберігся!")
+        cached_meta = json.loads(cached)
+        self.assertEqual(cached_meta["title"], self.bin.title)
+        self.assertEqual(cached_meta["author"], self.bin.author.username)

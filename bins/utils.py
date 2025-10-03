@@ -4,7 +4,7 @@ from django.conf import settings
 from datetime import timedelta
 from django.utils import timezone
 import redis
-
+import json
 
 from .models import Create_Bins
 from django.db.models import Q
@@ -167,3 +167,38 @@ def q_search(query):
     ).distinct()
 
     return results
+
+def cache_bin_meta_and_content(bin, bin_content=None, ttl_meta=3600, ttl_content=3600):
+    """
+    Кешує метадані та контент біна у Redis.
+    """
+    redis_cache = redis.Redis(host="localhost", port=6379)
+    meta_key = f"bin_meta:{bin.hash}"
+    content_key = f"bin_content:{bin.hash}"
+
+    meta = {
+        "title": bin.title,
+        "author": bin.author.username,
+        "created_at": str(bin.created_at),
+        "size_bin": getattr(bin, "size_bin", 0),
+        "language": bin.language,
+        "language_display": bin.get_language_display() if hasattr(bin, "get_language_display") else bin.language,
+        "category": bin.category,
+        "category_display": bin.get_category_display() if hasattr(bin, "get_category_display") else bin.category,
+        "tags": getattr(bin, "tags", ""),
+    }
+    redis_cache.setex(meta_key, ttl_meta, json.dumps(meta))
+
+    if bin_content is not None:
+        redis_cache.setex(content_key, ttl_content, bin_content)
+
+
+def invalidate_bin_cache(hash):
+    """
+    Видаляє кеш метаданих і контенту біна з Redis.
+    """
+    redis_cache = redis.Redis(host="localhost", port=6379)
+    meta_key = f"bin_meta:{hash}"
+    content_key = f"bin_content:{hash}"
+    redis_cache.delete(meta_key)
+    redis_cache.delete(content_key)
