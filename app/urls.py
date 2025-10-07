@@ -21,11 +21,12 @@ from debug_toolbar.toolbar import debug_toolbar_urls
 from app.settings import MEDIA_ROOT, MEDIA_URL, DEBUG
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('', include('main.urls', namespace='main')),
-    path('bins/', include('bins.urls', namespace='bins')),
-    path('user/', include('users.urls', namespace='user')),
-] 
+    path("admin/", admin.site.urls),
+    path("", include("main.urls", namespace="main")),
+    path("bins/", include("bins.urls", namespace="bins")),
+    path("user/", include("users.urls", namespace="user")),
+    path("accounts/", include("allauth.urls")),
+]
 
 if DEBUG:
     urlpatterns += debug_toolbar_urls()

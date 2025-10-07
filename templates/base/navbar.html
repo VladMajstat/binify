@@ -44,6 +44,7 @@
               <li><a class="dropdown-item user-dropdown-green" href="{% url "bins:user_bins" %}">Мої Bin</a></li>
               <li><a class="dropdown-item user-dropdown-green" href="{% url "bins:user_comments" %}">Мої коментарі</a></li>
               <li><a class="dropdown-item user-dropdown-green" href="{% url 'users:profile' %}">Мій профіль</a></li>
+              <li><a class="dropdown-item user-dropdown-green" href="{% url 'users:password_change' %}">Змінити пароль</a></li>
               {% if user.is_admin or user.is_staff %}
                 <li><a class="dropdown-item user-dropdown-green" href="{% url "admin:index" %}">Адмін панель</a></li>
               {% endif %}

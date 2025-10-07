@@ -1,0 +1,17 @@
+{% extends "base/base.html" %}
+{% load static %}
+{% load i18n %}
+{% block content %}
+<div class="container mt-5">
+    <div class="card bg-dark p-4">
+        <h2 class="mb-3 fw-bold" style="color:#ff4c4c;font-size: 2.2rem;">
+            Помилка входу через сторонній акаунт
+        </h2>
+        <p style="color: #fff;">
+            Виникла помилка під час спроби входу через ваш акаунт у соціальній мережі.<br>
+            Спробуйте ще раз або використайте інший спосіб входу.
+        </p>
+        <a href="{% url 'account_login' %}" class="btn btn-logo mt-3">Повернутися до входу</a>
+    </div>
+</div>
+{% endblock %}

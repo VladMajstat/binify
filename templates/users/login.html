@@ -1,5 +1,6 @@
 {% extends "base/base.html" %}
 {% load static %}
+{% load socialaccount %}
 
 {% block content %}
 <div class="row">
@@ -32,15 +33,11 @@
                 <!-- Альтернативна авторизація через соцмережі -->
                 <div class="text-center">
                     <p>Або увійдіть через:</p>
-                    <a href="#" class="btn btn-dark">
+                    <a href="{% provider_login_url 'google' %}" class="btn btn-dark">
                         <img class="mx-1" src="{% static "deps/icons/google.svg" %}" alt="Catalog Icon" width="16" height="16">
                         Google
                     </a>
-                    <a href="#" class="btn btn-dark">
-                        <img class="mx-1" src="{% static "deps/icons/facebook.svg" %}" alt="Catalog Icon" width="16" height="16">
-                        Facebook
-                    </a>
-                    <a href="#" class="btn btn-dark">
+                    <a href="{% provider_login_url 'github' %}" class="btn btn-dark">
                         <img class="mx-1" src="{% static "deps/icons/github.svg" %}" alt="Catalog Icon" width="16" height="16">
                         GitHub
                     </a>

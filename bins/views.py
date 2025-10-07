@@ -18,7 +18,7 @@ from .utils import (
     invalidate_bin_cache,
 )
 from .forms import CreateBinsForm, BinCommentForm, BinComment
-from hash_generator.fake_class import FakeBin
+from hash_generator.fake_class import FakeBin, FakeUser
 
 def create_bin(request):
     if request.method == "POST":

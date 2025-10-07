@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-#&1uc!lbcv6!-*org#w#hz^gahc5d(4o6m#+i68-b6!vw68iz*
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['*', "localhost", "127.0.0.1",]
 
 
 # Application definition
@@ -39,12 +39,22 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    'django.contrib.sites',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
+    'allauth.socialaccount.providers.github',
+
     'debug_toolbar',
 
     'main',
     'bins',
     'users',
 ]
+
+SITE_ID = 1
+LOGIN_REDIRECT_URL = "/user/profile/"
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -56,6 +66,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 
     "debug_toolbar.middleware.DebugToolbarMiddleware",
+    'allauth.account.middleware.AccountMiddleware',
 ]
 
 ROOT_URLCONF = 'app.urls'
@@ -165,3 +176,7 @@ AWS_S3_CUSTOM_DOMAIN = (
     f"{AWS_STORAGE_BUCKET_NAME}.037be68566e57c65fbe96c25cae2062f.r2.cloudflarestorage.com"
 )
 AWS_DEFAULT_ACL = None
+
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:8080",
+]

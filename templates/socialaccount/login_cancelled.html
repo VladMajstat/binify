@@ -1,0 +1,16 @@
+{% extends "base/base.html" %}
+{% load static %}
+{% load i18n %}
+{% block content %}
+<div class="container mt-5">
+    <div class="card bg-dark p-4">
+        <h2 class="mb-3 fw-bold" style="color:#ff4c4c;font-size: 2.2rem;">
+            Вхід скасовано
+        </h2>
+        <p style="color: #fff;">
+            Ви скасували вхід через одну із соціальних мереж.<br>
+            Якщо це було помилково, <a href="{% url 'account_login' %}" style="color:#43e97b;">увійдіть знову</a>.
+        </p>
+    </div>
+</div>
+{% endblock %}

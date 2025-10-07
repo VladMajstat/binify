@@ -1,0 +1,25 @@
+{% extends "base/base.html" %}
+{% load static %}
+{% load i18n %}
+{% block content %}
+<div class="container mt-5">
+    <div class="card bg-dark p-4">
+        <h2 class="mb-3 fw-bold" style="color:#43e97b;font-size: 2.2rem;">Вхід через {{ provider.name }}</h2>
+        <p>
+            {% if process == "connect" %}
+                <p style="color: #fff;">
+                    Ви збираєтесь підключити новий акаунт {{ provider.name }}.
+                </p>
+            {% else %}
+                <p style="color: #fff;">
+                    Ви збираєтесь увійти, використовуючи акаунт {{ provider.name }}.
+                </p>
+            {% endif %}
+        </p>
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-logo mt-3">Продовжити</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

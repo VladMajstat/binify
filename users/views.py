@@ -3,6 +3,8 @@ from django.contrib import auth, messages
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth import update_session_auth_hash
 
 from users.forms import UserLoginForm, UserRegistrationForm, ProfileForm
 from bins.models import Create_Bins, BinLike
@@ -23,7 +25,6 @@ def login(request):
             if user:
                 # Якщо користувач знайдений — виконуємо вхід і редірект на головну
                 auth.login(request, user)
-                messages.success(request, f"{username}, Ви успішно увійшли в систему.")
                 # --- Автоматичне створення Bin після логіну ---
                 pending_bin_data = request.session.pop('pending_bin_data', None)
                 if pending_bin_data:
@@ -57,7 +58,6 @@ def registration(request):
             form.save()
             user = form.instance
             auth.login(request, user)
-            messages.success(request, f"{user.username}, Ви успішно зареєструвалися й увійшли в аккаунт.")
             # --- Автоматичне створення Bin після реєстрації ---
             pending_bin_data = request.session.pop('pending_bin_data', None)
             if pending_bin_data:
@@ -110,3 +110,24 @@ def logout(request):
     messages.success(request, f"{request.user.username}, Ви успішно вийшли з аккаунт.")
     auth.logout(request)
     return HttpResponseRedirect(reverse('main:index'))
+
+
+@login_required
+def password_change(request):
+    if request.method == "POST":
+        form = PasswordChangeForm(user=request.user, data=request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(
+                request, user
+            )  # Щоб не вийти з акаунта після зміни паролю
+            messages.success(request, "Пароль успішно змінено!")
+            return HttpResponseRedirect(reverse("user:profile"))
+    else:
+        form = PasswordChangeForm(user=request.user)
+        
+    context = {
+        "title": "Зміна паролю",
+        "form": form,
+    }
+    return render(request, "users/password_change.html", context)
