@@ -43,4 +43,4 @@ def get_hash():
     return {"error": "No hash available"}
 
 # uvicorn hash_generator.hash_service:app --reload
-# uvicorn hash_generator.hash_service:app --reload --port 8001
+# uvicorn hash_generator.hash_service:app --reload --port 8081

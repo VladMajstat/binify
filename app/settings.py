@@ -46,6 +46,8 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.google',
     'allauth.socialaccount.providers.github',
 
+    'background_task',
+
     'debug_toolbar',
 
     'main',
@@ -179,4 +181,8 @@ AWS_DEFAULT_ACL = None
 
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:8080",
+]
+
+CRONJOBS = [
+    ('0 0 * * *', 'django.core.management.call_command', ['delete_bins']),  # кожного дня
 ]

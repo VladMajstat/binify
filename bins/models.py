@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.utils import timezone
+from django.conf import settings
 
 from .choices import CATEGORY_CHOICES, LANGUAGE_CHOICES, EXPIRY_CHOICES, ACCESS_CHOICES
 
@@ -16,12 +17,7 @@ class Create_Bins(models.Model):
     access = models.CharField(max_length=50, choices=ACCESS_CHOICES, default='public', verbose_name="Доступність", help_text="Виберіть, яким буде цей bin, публічним або приватним",)
     title = models.CharField(max_length=150, blank=True, verbose_name="Назва")
     size_bin = models.PositiveIntegerField(default=0, verbose_name="Розмір (байт)", help_text="Розмір вмісту в байтах")
-    author = models.ForeignKey(
-        get_user_model(),  # Динамічно отримує модель користувача
-        on_delete=models.SET_NULL,  # Якщо користувача видалено — поле стає NULL 
-        null=True, 
-        verbose_name="Автор"
-    )
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, verbose_name="Автор",)
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Створено")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Оновлено")
     likes_count = models.PositiveIntegerField(default=0, verbose_name="Кількість лайків")

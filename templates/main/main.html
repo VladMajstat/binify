@@ -1,25 +1,29 @@
 {% extends "base/base.html" %}
 {% block content %}
-    <!-- Заголовок і кнопка створення нового Bin -->
+    <!-- Заголовок і опис сайту -->
     <div class="text-center mb-4">
         <h1>Binify</h1>
         <p class="lead">{{ content }}</p>
+        <!-- Кнопка для створення нового Bin -->
         <a href="{% url 'bins:index' %}" class="btn btn-success btn-lg">{{ create_new_bin }}</a>
     </div>
+    <!-- Заголовок для останніх Bin -->
     <h3>{{ last_bin }}</h3>
     <div class="row">
-        <!-- Якщо був пошук, показати повідомлення -->
+        <!-- Повідомлення про результати пошуку -->
         {% if search_message %}
             <div class="alert alert-info text-center mb-3">{{ search_message }}</div>
         {% endif %}
-        <!-- Вивід кожного біна у вигляді картки -->
+        <!-- Вивід списку Bin -->
         {% for bin in bins %}
             <div class="col-md-6 col-lg-4 mb-3">
                 <div class="card bg-dark text-light h-100" style="border: 2px solid #43e97b;">
                     <div class="card-body">
+                        <!-- Назва Bin з посиланням -->
                         <h5 class="card-title">
                             <a href="{% url 'bins:view_bin' bin.hash %}" class="link-light">{{ bin.title }}</a>
                         </h5>
+                        <!-- Мова та категорія Bin -->
                         <div class="d-flex align-items-center mb-2 gap-3">
                             <span class="badge btn-logo" style="border:2px solid #43e97b;color:#43e97b;background:#181c20;">
                                 {{ bin.get_language_display }}
@@ -28,6 +32,7 @@
                                 {{ bin.get_category_display }}
                             </span>
                         </div>
+                        <!-- Перегляди та дата створення Bin -->
                         <div class="mb-2">
                             <span class="text-white small">Переглядів: {{ bin.views_count|default:"0" }}</span>
                             <span class="text-white small">Створено: {{ bin.created_at|date:"d.m.Y H:i" }}</span>
@@ -36,13 +41,14 @@
                 </div>
             </div>
         {% empty %}
+            <!-- Повідомлення, якщо немає жодного Bin -->
             <p>{{ 0_bins }}</p>
         {% endfor %}
     </div>
-    <!-- Кнопка для завантаження наступної сторінки бінів -->
-    {% if show_more %}
+    <!-- Кнопка для переходу на наступну сторінку (пагінація) -->
+    {% if bins.has_next %}
         <div class="text-center my-4">
-            <a href="?{% if query %}q={{ query }}&{% endif %}page={{ next_page }}" class="btn btn-success btn-lg">
+            <a href="?{% if query %}q={{ query }}&{% endif %}page={{ bins.next_page_number }}" class="btn btn-success btn-lg">
                 Показати ще Bins
             </a>
         </div>

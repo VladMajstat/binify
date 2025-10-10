@@ -8,7 +8,7 @@
             <!-- Профіль з даними користувача -->
             <div class="col-md-5">
                 <div class=" bg-white p-4 mb-4 mx-2 rounded custom-shadow">
-                    <h3 class="text-center mb-4">Профіль користувача</h3>
+                    <h3 class="text-center mb-4 text-dark">Профіль користувача</h3>
                     <form action="{% url "users:profile" %}" method="post" enctype="multipart/form-data">
                         {% csrf_token %}
                         <div class="row">

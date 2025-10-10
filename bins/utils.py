@@ -161,9 +161,9 @@ def q_search(query):
 
     # Пошук (використовуючи __icontains для нечутливого до регістру пошуку)
     results = Create_Bins.objects.filter(
-        Q(title__icontains=query)
-        | Q(category__icontains=query)
-        | Q(language__icontains=query)
+        Q(title__icontains=query) | 
+        Q(category__icontains=query) | 
+        Q(language__icontains=query)
     ).distinct()
 
     return results

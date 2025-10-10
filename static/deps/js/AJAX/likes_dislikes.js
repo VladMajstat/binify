@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Функція для отримання та оновлення лічильників лайків/дизлайків
     function updateLikesDislikes() {
         // GET-запит на сервер для отримання поточних значень
-        fetch(`/bins/bin_likes_dislikes/${binHash}/`)
+        fetch(`/bins/bin_likes_dislikes/${binHash}/`, )
             .then(response => response.json())
             .then(data => {
                 // Оновлюємо текст кнопок лайк/дизлайк

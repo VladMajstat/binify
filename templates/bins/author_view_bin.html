@@ -19,6 +19,7 @@
         <span class="badge btn-logo me-2" style="border:2px solid #43e97b;color:#43e97b;background:#181c20;font-size:1em;padding:0.3em 0.8em;">{{ bin.get_language_display }}</span>
         <span class="badge btn-logo me-2" style="border:2px solid #43e97b;color:#43e97b;background:#181c20;font-size:1em;padding:0.3em 0.8em;">{{ bin.get_category_display }}</span>
         <span class="text-white me-2">Розмір: {{ bin.size_bin|filesizeformat }} B</span>
+        <!-- Лайк/дизлайк через AJAX -->
         <button class="btn btn-logo btn-sm me-2" style="font-size:1em;padding:0.2em 0.7em;" id="like-btn">👍 {{ bin.likes|default:"0" }}</button>
         <button class="btn btn-logo btn-sm me-2" style="font-size:1em;padding:0.2em 0.7em;" id="dislike-btn">👎 {{ bin.dislikes|default:"0" }}</button>
         <button class="btn btn-logo btn-sm me-2" style="font-size:1em;padding:0.2em 0.7em;" id="copy-btn">Копіювати</button>

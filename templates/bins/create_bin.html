@@ -4,8 +4,11 @@
 <form method="post" class="mt-4">
     {% csrf_token %}
     <div class="mb-3">
-        <label for="id_content" class="form-label"></label>
-        <textarea class="form-control" id="id_content" name="content" rows="10" required></textarea>
+        <label for="id_content" class="form-label">Контент:</label>
+        <textarea class="form-control" id="id_content" name="content" rows="10" required>{{ form.content.value }}</textarea>
+        {% if form.content.errors %}
+            <div class="alert alert-danger">{{ form.content.errors }}</div>
+        {% endif %}
     </div>
     <h5 class="mt-4">Додаткові налаштування</h5>
     <div class="row">
@@ -13,41 +16,59 @@
             <label for="id_category" class="form-label">Категорія:</label>
             <select name="category" class="form-select" id="id_category">
                 {% for value, label in category_choices %}
-                  <option value="{{ value }}">{{ label }}</option>
+                  <option value="{{ value }}" {% if form.category.value == value %}selected{% endif %}>{{ label }}</option>
                 {% endfor %}
             </select>
+            {% if form.category.errors %}
+                <div class="alert alert-danger">{{ form.category.errors }}</div>
+            {% endif %}
         </div>
         <div class="col-md-6 mb-3">
             <label for="id_tags" class="form-label">Теги:</label>
             <input type="text" class="form-control" id="id_tags" name="tags" placeholder="Введіть теги через кому">
+            {% if form.tags.errors %}
+                <div class="alert alert-danger">{{ form.tags.errors }}</div>
+            {% endif %}
         </div>
         <div class="col-md-6 mb-3">
             <label for="id_language" class="form-label">Мова:</label>
             <select name="language" class="form-select" id="id_language">
                 {% for value, label in language_choices %}
-                  <option value="{{ value }}">{{ label }}</option>
+                  <option value="{{ value }}" {% if form.language.value == value %}selected{% endif %}>{{ label }}</option>
                 {% endfor %}
             </select>
+            {% if form.language.errors %}
+                <div class="alert alert-danger">{{ form.language.errors }}</div>
+            {% endif %}
         </div>
         <div class="col-md-6 mb-3">
             <label for="id_expiry" class="form-label">Термін дії:</label>
             <select name="expiry" class="form-select" id="id_expiry">
                 {% for value, label in expiry_choices %}
-                  <option value="{{ value }}">{{ label }}</option>
+                  <option value="{{ value }}" {% if form.expiry.value == value %}selected{% endif %}>{{ label }}</option>
                 {% endfor %}
             </select>
+            {% if form.expiry.errors %}
+                <div class="alert alert-danger">{{ form.expiry.errors }}</div>
+            {% endif %}
         </div>
         <div class="col-md-6 mb-3">
             <label for="id_access" class="form-label">Доступність:</label>
             <select name="access" class="form-select" id="id_access">
                 {% for value, label in access_choices %}
-                  <option value="{{ value }}">{{ label }}</option>
+                  <option value="{{ value }}" {% if form.access.value == value %}selected{% endif %}>{{ label }}</option>
                 {% endfor %}
             </select>
+            {% if form.access.errors %}
+                <div class="alert alert-danger">{{ form.access.errors }}</div>
+            {% endif %}
         </div>
         <div class="col-md-6 mb-3">
             <label for="id_title" class="form-label">Назва:</label>
             <input type="text" class="form-control" id="id_title" name="title" placeholder="Мій код" maxlength="100">
+            {% if form.title.errors %}
+                <div class="alert alert-danger">{{ form.title.errors }}</div>
+            {% endif %}
         </div>
     </div>
     <button type="submit" class="btn btn-success mt-3">Зберегти</button>
