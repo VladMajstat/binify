@@ -5,9 +5,11 @@ from datetime import timedelta
 from django.utils import timezone
 import redis
 import json
+from rapidfuzz import fuzz
+from django.core.paginator import Paginator
 
 from .models import Create_Bins
-from django.db.models import Q
+
 
 def create_bin_from_data(request, data):
     try:
@@ -150,23 +152,34 @@ def delete_from_r2(file_key):
         print(f"Помилка при видаленні з R2: {e}")
         return False
 
-def q_search(query):
+def smart_search(query):
     """
-    Пошук бінів.
-    Повертає QuerySet з результатами пошуку.
+    Розумний пошук по назві та мові.
+    Повертає список Bin-ів, у яких схожість з запитом > 0.
     """
-
     if not query:
         return Create_Bins.objects.none()
 
-    # Пошук (використовуючи __icontains для нечутливого до регістру пошуку)
-    results = Create_Bins.objects.filter(
-        Q(title__icontains=query) | 
-        Q(category__icontains=query) | 
-        Q(language__icontains=query)
-    ).distinct()
+    query = query.lower().strip()
+    bins = Create_Bins.objects.all()
+    results = []
 
-    return results
+    for bin in bins:
+        # Порівнюємо з назвою
+        title_score = fuzz.partial_ratio(query, bin.title.lower())
+        # Порівнюємо з мовою (display)
+        lang_score = fuzz.partial_ratio(query, bin.get_language_display().lower())
+        # Якщо хоча б одна схожість > 50, додаємо у результати
+        if max(title_score, lang_score) > 50:
+            results.append((max(title_score, lang_score), bin))
+
+    # Сортуємо за схожістю (від більшої до меншої)
+    results.sort(reverse=True, key=lambda x: x[0])
+
+    # Повертаємо тільки Bin-об'єкти
+    bins_ids = [bin.id for score, bin in results]
+    return Create_Bins.objects.filter(id__in=bins_ids).order_by("-created_at")
+
 
 def cache_bin_meta_and_content(bin, bin_content=None, ttl_meta=3600, ttl_content=3600):
     """

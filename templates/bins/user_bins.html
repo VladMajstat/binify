@@ -24,13 +24,6 @@
                             {% endif %}
                         </span>
                     </div>
-                    <!-- Кнопки редагування та видалення -->
-                    <div class="mt-2">
-                        <form method="post" action="{% url 'bins:delete_bin' bin.hash %}" style="display:inline;">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Ви впевнені, що хочете видалити Bin?');">Видалити</button>
-                        </form>
-                    </div>
                 </div>
             </div>
         {% empty %}

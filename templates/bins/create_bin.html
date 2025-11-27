@@ -5,7 +5,7 @@
     {% csrf_token %}
     <div class="mb-3">
         <label for="id_content" class="form-label">Контент:</label>
-        <textarea class="form-control" id="id_content" name="content" rows="10" required>{{ form.content.value }}</textarea>
+        <textarea class="form-control" id="id_content" name="content" rows="10" required placeholder="Напишіть контент">{% if form.content.value %}{{ form.content.value }}{% endif %}</textarea>
         {% if form.content.errors %}
             <div class="alert alert-danger">{{ form.content.errors }}</div>
         {% endif %}

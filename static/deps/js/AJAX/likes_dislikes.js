@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', function() {
         fetch(`/bins/bin_likes_dislikes/${binHash}/`, {
             method: 'POST',
             headers: {'X-CSRFToken': csrfToken},
-            body: new URLSearchParams({'is_like': 'true'})
+            body: new URLSearchParams({ 'action': 'like' })
         })
         .then(response => response.json())
         .then(data => {
@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', function() {
         fetch(`/bins/bin_likes_dislikes/${binHash}/`, {
             method: 'POST',
             headers: {'X-CSRFToken': csrfToken},
-            body: new URLSearchParams({'is_like': 'false'})
+            body: new URLSearchParams({ 'action': 'dislike' })
         })
         .then(response => response.json())
         .then(data => {

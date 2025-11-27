@@ -1,0 +1,28 @@
+{% for bin in bins %}
+    <div class="col-md-6 col-lg-4 mb-3">
+        <div class="card bg-dark text-light h-100" style="border: 2px solid #43e97b;">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <a href="{% url 'bins:view_bin' bin.hash %}" class="link-light">{{ bin.title }}</a>
+                </h5>
+                <div class="d-flex align-items-center mb-2 gap-3">
+                    <span class="badge btn-logo" style="border:2px solid #43e97b;color:#43e97b;background:#181c20;">
+                        {{ bin.get_language_display }}
+                    </span>
+                    <span class="badge btn-logo bin-category me-2" style="border:2px solid #43e97b;color:#43e97b;background:#181c20;font-size:1em;padding:0.3em 0.8em;">
+                        {{ bin.get_category_display }}
+                    </span>
+                </div>
+                <div class="mb-2">
+                    <span class="text-white small">Переглядів: {{ bin.views_count|default:"0" }}</span>
+                    <span class="text-white small">Створено: {{ bin.created_at|date:"d.m.Y H:i" }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endfor %}
+{% if bins.has_next %}
+    <div class="d-flex justify-content-center mt-4">
+        <button id="load-more-btn" class="btn btn-success" data-next-page="{{ bins.next_page_number }}">Показати ще Bin</button>
+    </div>
+{% endif %}

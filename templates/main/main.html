@@ -1,4 +1,6 @@
 {% extends "base/base.html" %}
+{% load static %}
+
 {% block content %}
     <!-- Заголовок і опис сайту -->
     <div class="text-center mb-4">
@@ -15,42 +17,77 @@
             <div class="alert alert-info text-center mb-3">{{ search_message }}</div>
         {% endif %}
         <!-- Вивід списку Bin -->
-        {% for bin in bins %}
-            <div class="col-md-6 col-lg-4 mb-3">
-                <div class="card bg-dark text-light h-100" style="border: 2px solid #43e97b;">
-                    <div class="card-body">
-                        <!-- Назва Bin з посиланням -->
-                        <h5 class="card-title">
-                            <a href="{% url 'bins:view_bin' bin.hash %}" class="link-light">{{ bin.title }}</a>
-                        </h5>
-                        <!-- Мова та категорія Bin -->
-                        <div class="d-flex align-items-center mb-2 gap-3">
-                            <span class="badge btn-logo" style="border:2px solid #43e97b;color:#43e97b;background:#181c20;">
-                                {{ bin.get_language_display }}
-                            </span>
-                            <span class="badge btn-logo bin-category me-2" style="border:2px solid #43e97b;color:#43e97b;background:#181c20;font-size:1em;padding:0.3em 0.8em;">
-                                {{ bin.get_category_display }}
-                            </span>
-                        </div>
-                        <!-- Перегляди та дата створення Bin -->
-                        <div class="mb-2">
-                            <span class="text-white small">Переглядів: {{ bin.views_count|default:"0" }}</span>
-                            <span class="text-white small">Створено: {{ bin.created_at|date:"d.m.Y H:i" }}</span>
+        <div id="bins-list" class="row">
+            {% for bin in bins_page %}
+                <div class="col-md-6 col-lg-4 mb-3">
+                    <div class="card bg-dark text-light h-100" style="border: 2px solid #43e97b;">
+                        <div class="card-body">
+                            <!-- Назва Bin з посиланням -->
+                            <h5 class="card-title">
+                                <a href="{% url 'bins:view_bin' bin.hash %}" class="link-light">{{ bin.title }}</a>
+                            </h5>
+                            <!-- Мова та категорія Bin -->
+                            <div class="d-flex align-items-center mb-2 gap-3">
+                                <span class="badge btn-logo" style="border:2px solid #43e97b;color:#43e97b;background:#181c20;">
+                                    {{ bin.get_language_display }}
+                                </span>
+                                <span class="badge btn-logo bin-category me-2" style="border:2px solid #43e97b;color:#43e97b;background:#181c20;font-size:1em;padding:0.3em 0.8em;">
+                                    {{ bin.get_category_display }}
+                                </span>
+                            </div>
+                            <!-- Перегляди та дата створення Bin -->
+                            <div class="mb-2">
+                                <span class="text-white small">Переглядів: {{ bin.views_count|default:"0" }}</span>
+                                <span class="text-white small">Створено: {{ bin.created_at|date:"d.m.Y H:i" }}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        {% empty %}
-            <!-- Повідомлення, якщо немає жодного Bin -->
-            <p>{{ 0_bins }}</p>
-        {% endfor %}
-    </div>
-    <!-- Кнопка для переходу на наступну сторінку (пагінація) -->
-    {% if bins.has_next %}
-        <div class="text-center my-4">
-            <a href="?{% if query %}q={{ query }}&{% endif %}page={{ bins.next_page_number }}" class="btn btn-success btn-lg">
-                Показати ще Bins
-            </a>
+            {% empty %}
+                <!-- Повідомлення, якщо немає жодного Bin -->
+                <p>{{ 0_bins }}</p>
+            {% endfor %}
         </div>
-    {% endif %}
+    </div>
+    <!-- (пагінація) -->
+{% if page_obj.paginator.num_pages > 1 %}
+    <nav aria-label="Пагінація Bin">
+        <ul class="pagination justify-content-center my-4">
+            <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
+                <a class="page-link" href="{% if page_obj.has_previous %}?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% else %}#{% endif %}">Назад</a>
+            </li>
+    
+            {# Перша сторінка #}
+            {% if page_obj.number > 3 %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1{% if query %}&q={{ query }}{% endif %}">1</a>
+                </li>
+                <li class="page-item disabled"><span class="page-link">...</span></li>
+            {% endif %}
+    
+            {# Основний діапазон сторінок #}
+            {% for page in page_obj.paginator.page_range %}
+                {% if page >= page_obj.number|add:"-2" and page <= page_obj.number|add:"2" %}
+                    <li class="page-item {% if page_obj.number == page %}active{% endif %}">
+                        <a class="page-link" href="?page={{ page }}{% if query %}&q={{ query }}{% endif %}">{{ page }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+    
+            {# Остання сторінка #}
+            {% if page_obj.number < page_obj.paginator.num_pages|add:"-2" %}
+                <li class="page-item disabled"><span class="page-link">...</span></li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}">{{ page_obj.paginator.num_pages }}</a>
+                </li>
+            {% endif %}
+    
+            <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
+                <a class="page-link" href="{% if page_obj.has_next %}?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% else %}#{% endif %}">Вперед</a>
+            </li>
+        </ul>
+    </nav>
+{% endif %}
+
 {% endblock %}
+

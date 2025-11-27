@@ -178,6 +178,7 @@ class UserCommentsView(ListView):
 
 # Повертає кількість лайків/дизлайків для біна (GET) або додає лайк/дизлайк (POST).
 class BinLikeDislikeView(View):
+
     def get(self, request, *args, **kwargs):
         bin_hash = kwargs.get("hash")
         bin_obj = get_object_or_404(Create_Bins, hash=bin_hash)
@@ -185,7 +186,7 @@ class BinLikeDislikeView(View):
             "likes": bin_obj.likes_count,
             "dislikes": bin_obj.dislikes_count
         })
-        
+
     def post(self, request, *args, **kwargs):
         bin_hash = kwargs.get("hash")
         bin_obj = get_object_or_404(Create_Bins, hash=bin_hash)
@@ -194,16 +195,42 @@ class BinLikeDislikeView(View):
         if not request.user.is_authenticated:
             return JsonResponse({"error": "Потрібна авторизація"}, status=403)
 
+        # --- Логіка для одного лайка/дизлайка ---
+        like_obj = BinLike.objects.filter(bin=bin_obj, user=request.user).first()
         if action == "like":
+            if like_obj and like_obj.is_like:
+                return JsonResponse(
+                    {
+                        "likes": bin_obj.likes_count,
+                        "dislikes": bin_obj.dislikes_count,
+                    })
+            # Якщо був дизлайк — забираємо його
+            if like_obj and not like_obj.is_like:
+                bin_obj.dislikes_count -= 1
+                like_obj.delete()
+            BinLike.objects.create(bin=bin_obj, user=request.user, is_like=True)
             bin_obj.likes_count += 1
-            bin_obj.save(update_fields=["likes_count"])
-            return JsonResponse({"likes": bin_obj.likes_count})
+            bin_obj.save(update_fields=["likes_count", "dislikes_count"])
         elif action == "dislike":
+            if like_obj and not like_obj.is_like:
+                return JsonResponse(
+                    {
+                        "likes": bin_obj.likes_count,
+                        "dislikes": bin_obj.dislikes_count,
+                    })
+            # Якщо був лайк — забираємо його
+            if like_obj and like_obj.is_like:
+                bin_obj.likes_count -= 1
+                like_obj.delete()
+            BinLike.objects.create(bin=bin_obj, user=request.user, is_like=False)
             bin_obj.dislikes_count += 1
-            bin_obj.save(update_fields=["dislikes_count"])
-            return JsonResponse({"dislikes": bin_obj.dislikes_count})
+            bin_obj.save(update_fields=["likes_count", "dislikes_count"])
         else:
             return JsonResponse({"error": "Невідома дія"}, status=400)
+
+        return JsonResponse(
+            {"likes": bin_obj.likes_count, "dislikes": bin_obj.dislikes_count}
+        )
 
 
 class BinCommentView(View):
@@ -219,14 +246,11 @@ class BinCommentView(View):
             return JsonResponse({"error": "Коментар не може бути порожнім"}, status=400)
 
         comment = BinComment.objects.create(bin=bin_obj, author=request.user, text=text)
+        comment_html = render_to_string("bins/bin_comment.html", {"comment": comment}, request=request)
         return JsonResponse(
             {
                 "success": True,
-                "comment": {
-                    "author": comment.author.username,
-                    "text": comment.text,
-                    "created_at": comment.created_at.strftime("%d.%m.%Y %H:%M"),
-                },
+                "comment_html": comment_html,
             }
         )
 
@@ -301,8 +325,8 @@ class DeleteBinView(View):
         bin_obj.delete()
 
         messages.success(request, "Bin успішно видалено!")
-        return JsonResponse({"success": True})
-
-    def get(self, request, *args, **kwargs):
-        # Можна зробити редірект або показати сторінку підтвердження
         return redirect("bins:user_bins")
+
+    # def get(self, request, *args, **kwargs):
+    #     # Можна зробити редірект або показати сторінку підтвердження
+    #     return redirect("bins:user_bins")

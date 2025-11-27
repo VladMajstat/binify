@@ -168,3 +168,28 @@ body {
   display: inline-block;
   vertical-align: middle;
 }
+
+/* Пагінація */
+.pagination .page-item .page-link {
+  color: #43e97b; /* Яскраво-зелений */
+  background-color: #111; /* Чорна заливка */
+  border: 2px solid #43e97b; /* Зелена окантовка */
+  margin: 0 2px;
+  border-radius: 8px;
+  font-weight: bold;
+  transition: background 0.2s, color 0.2s;
+}
+
+.pagination .page-item.active .page-link {
+  background-color: #43e97b; /* Зелений фон для активної */
+  color: #111; /* Чорний текст */
+  border-color: #43e97b;
+}
+
+.pagination .page-item.disabled .page-link {
+  color: #43e97b;
+  background-color: #111;
+  border: 2px solid #43e97b;
+  opacity: 0.5;
+  cursor: not-allowed;
+}
