@@ -11,20 +11,31 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+from datetime import timedelta
+import environ
+
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Ініціалізація django-environ: читаємо змінні з файлу .env (якщо він є)
+env = environ.Env(
+    DEBUG=(bool, True),
+)
+environ.Env.read_env(BASE_DIR / '.env')
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-#&1uc!lbcv6!-*org#w#hz^gahc5d(4o6m#+i68-b6!vw68iz*'
+# Беремо секретний ключ з .env; якщо його немає — використовуємо поточний локальний дефолт
+SECRET_KEY = env('DJANGO_SECRET_KEY', default='django-insecure-#&1uc!lbcv6!-*org#w#hz^gahc5d(4o6m#+i68-b6!vw68iz*')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# DEBUG також конфігурується через .env
+DEBUG = env.bool('DEBUG', True)
 
 ALLOWED_HOSTS = ['*', "localhost", "127.0.0.1",]
 
@@ -50,12 +61,14 @@ INSTALLED_APPS = [
 
     'debug_toolbar',
 
+    "rest_framework",
+
     'main',
     'bins',
     'users',
 ]
 
-SITE_ID = 1
+SITE_ID = env.int('SITE_ID', default=1)
 LOGIN_REDIRECT_URL = "/user/profile/"
 
 MIDDLEWARE = [
@@ -95,14 +108,8 @@ WSGI_APPLICATION = 'app.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'binify',
-        'USER': 'binify',
-        'PASSWORD': 'binify',
-        'HOST': 'localhost',
-        'PORT': '5432',
-    }
+    # Використовуємо DATABASE_URL з .env за стандартним форматом
+    'default': env.db(default='postgres://binify:binify@localhost:5432/binify')
 }
 
 
@@ -164,25 +171,61 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'users.User'
 
-# cloudflare
-AWS_ACCESS_KEY_ID = "681e93a6d6bcc1b6e188dbbe34fcde9a"
-AWS_SECRET_ACCESS_KEY = (
+# cloudflare (зчитуємо з оточення, збережено поточні значення як дефолти)
+AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID', default="681e93a6d6bcc1b6e188dbbe34fcde9a")
+AWS_SECRET_ACCESS_KEY = env('AWS_SECRET_ACCESS_KEY', default=(
     "2753ca3d3dd640f113806867495e5c41f9dd7f69e403eb8d55885a97f0c6ed87"
-)
-AWS_STORAGE_BUCKET_NAME = "binify-bucket"
-AWS_S3_REGION_NAME = "EEUR"
-AWS_S3_ENDPOINT_URL = (
+))
+AWS_STORAGE_BUCKET_NAME = env('AWS_STORAGE_BUCKET_NAME', default="binify-bucket")
+AWS_S3_REGION_NAME = env('AWS_S3_REGION_NAME', default="EEUR")
+AWS_S3_ENDPOINT_URL = env('AWS_S3_ENDPOINT_URL', default=(
     "https://037be68566e57c65fbe96c25cae2062f.r2.cloudflarestorage.com"
-)
-AWS_S3_CUSTOM_DOMAIN = (
+))
+AWS_S3_CUSTOM_DOMAIN = env('AWS_S3_CUSTOM_DOMAIN', default=(
     f"{AWS_STORAGE_BUCKET_NAME}.037be68566e57c65fbe96c25cae2062f.r2.cloudflarestorage.com"
-)
+))
 AWS_DEFAULT_ACL = None
 
-CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:8080",
-]
+CSRF_TRUSTED_ORIGINS = env.list('CSRF_TRUSTED_ORIGINS', default=["http://localhost:8080"])
 
 CRONJOBS = [
     ('0 0 * * *', 'django.core.management.call_command', ['delete_bins']),  # кожного дня
 ]
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "rest_framework.authentication.SessionAuthentication",  # для шаблонів
+    ),
+    "DEFAULT_PERMISSION_CLASSES": (
+        "rest_framework.permissions.IsAuthenticatedOrReadOnly",
+    ),
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 20,
+    # опціонально: throttling (rate limiting)
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.AnonRateThrottle",
+        "rest_framework.throttling.UserRateThrottle",
+    ],
+    "DEFAULT_THROTTLE_RATES": {
+        "anon": "100/day",
+        "user": "1000/day",
+    },
+}
+
+# SIMPLE_JWT: читаємо секрет і параметри з .env для гнучкості
+# Зберігайте лише секрети (SIMPLE_JWT_SECRET) в .env; інші параметри можуть мати дефолти
+JWT_SIGNING_KEY = env('SIMPLE_JWT_SECRET', default=None)
+if JWT_SIGNING_KEY is None:
+    # fallback для локальної розробки — використовуємо SECRET_KEY
+    JWT_SIGNING_KEY = SECRET_KEY
+
+SIMPLE_JWT = {
+    "SIGNING_KEY": JWT_SIGNING_KEY,
+    "ALGORITHM": env('SIMPLE_JWT_ALGORITHM', default="HS256"),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=30),
+    "ROTATE_REFRESH_TOKENS": False,
+    "BLACKLIST_AFTER_ROTATION": False,
+    "AUTH_HEADER_TYPES": ("Bearer",),
+}

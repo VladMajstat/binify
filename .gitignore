@@ -5,6 +5,7 @@ cache/
 
 .vscode
 .idea
+.env
 
 db.sqlite3
 media/
