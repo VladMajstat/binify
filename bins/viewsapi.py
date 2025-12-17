@@ -2,10 +2,13 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.pagination import PageNumberPagination
 from django.shortcuts import get_object_or_404
 from django.core.exceptions import ValidationError
+from django.db.models import Q
+from django.utils import timezone
 
-from .serializers import CreateBinsSerializer
+from .serializers import CreateBinsSerializer, BinListSerializer
 from .services import (
     create_bin_service,
     update_bin_service,
@@ -14,6 +17,8 @@ from .services import (
     ServiceError,
 )
 from .models import Create_Bins
+from .utils import smart_search
+from .choices import CATEGORY_CHOICES, LANGUAGE_CHOICES
 
 
 class CreateBinAPIView(APIView):
@@ -88,3 +93,94 @@ class DeleteBinAPIView(APIView):
             return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class BinsPagination(PageNumberPagination):
+    """Пагінація для списків бінів."""
+    page_size = 20
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
+
+class PublicBinsListAPIView(APIView):
+    """Публічні біни з пагінацією та фільтрами."""
+    permission_classes = [AllowAny]
+    
+    def get(self, request):
+        queryset = Create_Bins.objects.select_related('author').order_by('-created_at')
+        
+        # Фільтри з query params
+        language = request.query_params.get('language')
+        category = request.query_params.get('category')
+        author = request.query_params.get('author')  # username
+
+        allowed_languages = {choice[0] for choice in LANGUAGE_CHOICES}
+        allowed_categories = {choice[0] for choice in CATEGORY_CHOICES}
+        
+        if language:
+            if language not in allowed_languages:
+                return Response({"detail": "Invalid language"}, status=status.HTTP_400_BAD_REQUEST)
+            queryset = queryset.filter(language=language)
+        if category:
+            if category not in allowed_categories:
+                return Response({"detail": "Invalid category"}, status=status.HTTP_400_BAD_REQUEST)
+            queryset = queryset.filter(category=category)
+        if author:
+            queryset = queryset.filter(author__username=author)
+        
+        # Фільтр активних (не протухлі)
+        active_only = request.query_params.get('active', 'true').lower() == 'true'
+        if active_only:
+            queryset = queryset.filter(Q(expiry_at__isnull=True) | Q(expiry_at__gt=timezone.now()))
+
+        # Публічні тільки (додатково страховка)
+        queryset = queryset.filter(access='public')
+        
+        # Пагінація
+        paginator = BinsPagination()
+        page = paginator.paginate_queryset(queryset, request)
+        serializer = BinListSerializer(page, many=True)
+        return paginator.get_paginated_response(serializer.data)
+
+
+class MyBinsListAPIView(APIView):
+    """Біни поточного користувача (JWT)."""
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        queryset = Create_Bins.objects.filter(author=request.user).select_related('author').order_by('-created_at')
+        
+        # Опціонально: фільтр активних
+        active_only = request.query_params.get('active', 'false').lower() == 'true'
+        if active_only:
+            queryset = queryset.filter(Q(expiry_at__isnull=True) | Q(expiry_at__gt=timezone.now()))
+        
+        paginator = BinsPagination()
+        page = paginator.paginate_queryset(queryset, request)
+        serializer = BinListSerializer(page, many=True)
+        return paginator.get_paginated_response(serializer.data)
+
+
+class SearchBinsAPIView(APIView):
+    """Пошук бінів по назві та мові через fuzzy matching (smart_search)."""
+    permission_classes = [AllowAny]
+    
+    def get(self, request):
+        query = request.query_params.get('q', '').strip()
+        
+        if not query:
+            return Response({"detail": "Query parameter 'q' is required"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Використовуємо smart_search з utils (fuzzy matching)
+        queryset = smart_search(query)
+        
+        # Фільтр активних
+        queryset = queryset.filter(Q(expiry_at__isnull=True) | Q(expiry_at__gt=timezone.now()))
+        
+        # Фільтр публічних (опціонально — smart_search шукає по всіх)
+        queryset = queryset.filter(access='public')
+        
+        paginator = BinsPagination()
+        page = paginator.paginate_queryset(queryset, request)
+        serializer = BinListSerializer(page, many=True)
+        return paginator.get_paginated_response(serializer.data)

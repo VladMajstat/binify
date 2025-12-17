@@ -4,7 +4,6 @@ from django.shortcuts import get_object_or_404, redirect
 from django.http import JsonResponse
 from django.views import View
 from django.template.loader import render_to_string
-import redis
 import json
 from django.views.generic.edit import FormView
 from django.views.generic.detail import DetailView
@@ -20,6 +19,7 @@ from .utils import (
     get_bin_content,
     cache_bin_meta_and_content,
     invalidate_bin_cache,
+    get_redis_client,
 )
 from .forms import CreateBinsForm, BinCommentForm, BinComment
 from hash_generator.fake_class import FakeBin
@@ -75,7 +75,7 @@ class ViewBin(DetailView):
     def get_object(self, queryset=None):
         # Отримуємо об'єкт Bin за hash (slug)
         hash = self.kwargs.get(self.slug_url_kwarg)
-        redis_cache = redis.Redis(host="localhost", port=6379)
+        redis_cache = get_redis_client()
         meta_key = f"bin_meta:{hash}"
         meta = redis_cache.get(meta_key)
         if meta:
@@ -116,7 +116,7 @@ class ViewBin(DetailView):
             bin.save(update_fields=["views_count"])
 
         # --- Кешування контенту ---
-        redis_cache = redis.Redis(host="localhost", port=6379)
+        redis_cache = get_redis_client()
         content_key = f"bin_content:{bin.hash}"
         bin_content = redis_cache.get(content_key)
         if bin_content:

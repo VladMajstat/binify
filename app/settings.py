@@ -231,6 +231,6 @@ SIMPLE_JWT = {
 }
 
 # Redis configuration
-REDIS_HOST = env('REDIS_HOST')
-REDIS_PORT = env.int('REDIS_PORT')
-REDIS_DB = env.int('REDIS_DB')
+REDIS_HOST = env('REDIS_HOST', default='localhost')
+REDIS_PORT = env.int('REDIS_PORT', default=6379)
+REDIS_DB = env.int('REDIS_DB', default=0)

@@ -57,6 +57,9 @@ class BinLike(models.Model):
     is_like = models.BooleanField(default=True)  # True=лайк, False=дизлайк
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        unique_together = ('bin', 'user')  # один запис на пару (бін, користувач)
+
 class BinComment(models.Model):
     bin = models.ForeignKey(Create_Bins, on_delete=models.CASCADE, related_name="comments")  # звʼязок з біном
     author = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, null=True, blank=True)  # автор коментаря

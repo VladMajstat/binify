@@ -9,8 +9,8 @@
 from django.db import transaction
 from django.core.exceptions import ValidationError
 
-import redis
 import uuid
+
 
 from .utils import (
     upload_to_r2,
@@ -206,3 +206,5 @@ def delete_bin_service(bin_obj, user):
             pass
 
     return True
+
+

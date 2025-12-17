@@ -19,4 +19,9 @@ urlpatterns = [
     path("api/update/<int:pk>/", viewsapi.UpdateBinAPIView.as_view(), name="api_update_bin"),
     path("api/bin/<int:pk>/", viewsapi.GetBinAPIView.as_view(), name="api_get_bin"),
     path("api/delete/<int:pk>/", viewsapi.DeleteBinAPIView.as_view(), name="api_delete_bin"),
+    
+    # Lists & Search
+    path("api/bins/", viewsapi.PublicBinsListAPIView.as_view(), name="api_public_bins"),
+    path("api/my-bins/", viewsapi.MyBinsListAPIView.as_view(), name="api_my_bins"),
+    path("api/search/", viewsapi.SearchBinsAPIView.as_view(), name="api_search_bins"),
 ]
