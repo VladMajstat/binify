@@ -17,7 +17,7 @@ from .services import (
     ServiceError,
 )
 from .models import Create_Bins
-from .utils import smart_search
+from .utils import smart_search, get_bin_content
 from .choices import CATEGORY_CHOICES, LANGUAGE_CHOICES
 
 
@@ -184,3 +184,35 @@ class SearchBinsAPIView(APIView):
         page = paginator.paginate_queryset(queryset, request)
         serializer = BinListSerializer(page, many=True)
         return paginator.get_paginated_response(serializer.data)
+
+
+class BinRawByPkAPIView(APIView):
+    """Повертає raw text/plain контент біну за ID."""
+    permission_classes = [AllowAny]
+    
+    def get(self, request, pk):
+        bin_obj = get_object_or_404(Create_Bins, pk=pk)
+        
+        # Перевірка доступу: приватні біни тільки для автора
+        if bin_obj.access == 'private' and bin_obj.author != request.user:
+            return Response({"detail": "Access denied"}, status=status.HTTP_403_FORBIDDEN)
+        
+        content = get_bin_content(bin_obj, default="Content not found")
+        
+        return Response(content, content_type='text/plain', status=status.HTTP_200_OK)
+
+
+class BinRawByHashAPIView(APIView):
+    """Повертає raw text/plain контент біну за hash."""
+    permission_classes = [AllowAny]
+    
+    def get(self, request, hash):
+        bin_obj = get_object_or_404(Create_Bins, hash=hash)
+        
+        # Перевірка доступу: приватні біни тільки для автора
+        if bin_obj.access == 'private' and bin_obj.author != request.user:
+            return Response({"detail": "Access denied"}, status=status.HTTP_403_FORBIDDEN)
+        
+        content = get_bin_content(bin_obj, default="Content not found")
+        
+        return Response(content, content_type='text/plain', status=status.HTTP_200_OK)

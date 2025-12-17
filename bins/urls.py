@@ -16,9 +16,13 @@ urlpatterns = [
 
     # DRF API endpoints
     path("api/create/", viewsapi.CreateBinAPIView.as_view(), name="api_create_bin"),
-    path("api/update/<int:pk>/", viewsapi.UpdateBinAPIView.as_view(), name="api_update_bin"),
     path("api/bin/<int:pk>/", viewsapi.GetBinAPIView.as_view(), name="api_get_bin"),
+    path("api/update/<int:pk>/", viewsapi.UpdateBinAPIView.as_view(), name="api_update_bin"),
     path("api/delete/<int:pk>/", viewsapi.DeleteBinAPIView.as_view(), name="api_delete_bin"),
+
+    # Raw content (зручні URL, ставимо перед api/bin/<int:pk>)
+    path("api/bin/raw/<int:pk>/", viewsapi.BinRawByPkAPIView.as_view(), name="api_bin_raw_pk"),
+    path("api/bin/raw/hash/<str:hash>/", viewsapi.BinRawByHashAPIView.as_view(), name="api_bin_raw_hash"),
     
     # Lists & Search
     path("api/bins/", viewsapi.PublicBinsListAPIView.as_view(), name="api_public_bins"),
