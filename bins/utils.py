@@ -11,6 +11,15 @@ from django.core.paginator import Paginator
 from .models import Create_Bins
 
 
+def get_redis_client():
+    """Повертає Redis клієнт з налаштувань Django."""
+    return redis.Redis(
+        host=settings.REDIS_HOST,
+        port=settings.REDIS_PORT,
+        db=settings.REDIS_DB,
+    )
+
+
 def create_bin_from_data(request, data):
     try:
         filename = f"bins/bin_{uuid.uuid4().hex}.txt"
@@ -33,7 +42,7 @@ def create_bin_from_data(request, data):
             size_bin=size_bin,
         )
 
-        redis_client = redis.Redis(host="localhost", port=6379)
+        redis_client = get_redis_client()
 
         # Отримуємо хеш напряму з Redis
         hash_value = redis_client.lpop("my_unique_hash_pool")
@@ -185,7 +194,7 @@ def cache_bin_meta_and_content(bin, bin_content=None, ttl_meta=3600, ttl_content
     """
     Кешує метадані та контент біна у Redis.
     """
-    redis_cache = redis.Redis(host="localhost", port=6379)
+    redis_cache = get_redis_client()
     meta_key = f"bin_meta:{bin.hash}"
     content_key = f"bin_content:{bin.hash}"
 
@@ -210,7 +219,7 @@ def invalidate_bin_cache(hash):
     """
     Видаляє кеш метаданих і контенту біна з Redis.
     """
-    redis_cache = redis.Redis(host="localhost", port=6379)
+    redis_cache = get_redis_client()
     meta_key = f"bin_meta:{hash}"
     content_key = f"bin_content:{hash}"
     redis_cache.delete(meta_key)

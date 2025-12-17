@@ -1,5 +1,6 @@
 from django.urls import path
 from bins import views
+from . import viewsapi
 
 app_name = 'bins'
 
@@ -12,4 +13,10 @@ urlpatterns = [
     path("bin_comment/<str:hash>/", views.BinCommentView.as_view(), name="bin_comment"),
     path("edit_bin/<str:hash>/", views.EditBinView.as_view(), name="edit_bin"),
     path("delete_bin/<str:hash>/", views.DeleteBinView.as_view(), name="delete_bin"),
+
+    # DRF API endpoints
+    path("api/create/", viewsapi.CreateBinAPIView.as_view(), name="api_create_bin"),
+    path("api/update/<int:pk>/", viewsapi.UpdateBinAPIView.as_view(), name="api_update_bin"),
+    path("api/bin/<int:pk>/", viewsapi.GetBinAPIView.as_view(), name="api_get_bin"),
+    path("api/delete/<int:pk>/", viewsapi.DeleteBinAPIView.as_view(), name="api_delete_bin"),
 ]

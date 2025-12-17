@@ -229,3 +229,8 @@ SIMPLE_JWT = {
     "BLACKLIST_AFTER_ROTATION": False,
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
+
+# Redis configuration
+REDIS_HOST = env('REDIS_HOST')
+REDIS_PORT = env.int('REDIS_PORT')
+REDIS_DB = env.int('REDIS_DB')
