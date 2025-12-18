@@ -17,7 +17,7 @@ from .services import (
     ServiceError,
 )
 from .models import Create_Bins
-from .utils import smart_search, get_bin_content
+from .utils import smart_search, get_bin_content, get_bin_or_error
 from .choices import CATEGORY_CHOICES, LANGUAGE_CHOICES
 from .permissions import IsAuthor, IsAuthorOrAdmin
 
@@ -46,7 +46,10 @@ class UpdateBinAPIView(APIView):
     permission_classes = [IsAuthor]
 
     def put(self, request, pk):
-        bin_obj = get_object_or_404(Create_Bins, pk=pk)
+        bin_obj, error = get_bin_or_error(pk=pk)
+        if error:
+            return error
+        
         self.check_object_permissions(request, bin_obj)
 
         serializer = CreateBinsSerializer(data=request.data)
@@ -66,7 +69,10 @@ class GetBinAPIView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request, pk):
-        bin_obj = get_object_or_404(Create_Bins, pk=pk)
+        bin_obj, error = get_bin_or_error(pk=pk)
+        if error:
+            return error
+        
         try:
             data = get_bin_service(bin_obj, request.user)
             return Response(data, status=status.HTTP_200_OK)
@@ -82,7 +88,10 @@ class DeleteBinAPIView(APIView):
     permission_classes = [IsAuthorOrAdmin]
 
     def delete(self, request, pk):
-        bin_obj = get_object_or_404(Create_Bins, pk=pk)
+        bin_obj, error = get_bin_or_error(pk=pk)
+        if error:
+            return error
+        
         self.check_object_permissions(request, bin_obj)
         try:
             delete_bin_service(bin_obj, request.user)
@@ -191,7 +200,9 @@ class BinRawByPkAPIView(APIView):
     permission_classes = [AllowAny]
     
     def get(self, request, pk):
-        bin_obj = get_object_or_404(Create_Bins, pk=pk)
+        bin_obj, error = get_bin_or_error(pk=pk)
+        if error:
+            return error
         
         # Перевірка доступу: приватні біни тільки для автора
         if bin_obj.access == 'private' and bin_obj.author != request.user:
@@ -207,7 +218,9 @@ class BinRawByHashAPIView(APIView):
     permission_classes = [AllowAny]
     
     def get(self, request, hash):
-        bin_obj = get_object_or_404(Create_Bins, hash=hash)
+        bin_obj, error = get_bin_or_error(hash=hash)
+        if error:
+            return error
         
         # Перевірка доступу: приватні біни тільки для автора
         if bin_obj.access == 'private' and bin_obj.author != request.user:

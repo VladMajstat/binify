@@ -64,7 +64,7 @@ INSTALLED_APPS = [
     "rest_framework",
 
     'main',
-    'bins',
+    'bins.apps.BinsConfig',
     'users',
 ]
 

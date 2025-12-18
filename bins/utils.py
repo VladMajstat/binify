@@ -7,12 +7,46 @@ import redis
 import json
 from rapidfuzz import fuzz
 from django.core.paginator import Paginator
+from rest_framework.response import Response
+from rest_framework import status
 
 from .models import Create_Bins
 
 
+def get_bin_or_error(**lookup):
+    """
+    Повертає бін за заданим lookup або Response з помилкою 404.
+    
+    Args:
+        **lookup: Keyword arguments для пошуку біна (наприклад, pk=123, hash='abc')
+    
+    Returns:
+        tuple: (bin_obj, None) якщо бін знайдено, або (None, error_response) якщо ні
+    
+    Examples:
+        bin, error = get_bin_or_error(pk=123)
+        bin, error = get_bin_or_error(hash='abc123')
+    """
+    try:
+        return Create_Bins.objects.get(**lookup), None
+    except Create_Bins.DoesNotExist:
+        # Визначаємо назву поля і значення для повідомлення
+        field, value = next(iter(lookup.items()))
+        field_name = "id" if field == "pk" else field
+        error_response = Response(
+            {"detail": f"Bin with {field_name} '{value}' not found"},
+            status=status.HTTP_404_NOT_FOUND
+        )
+        return None, error_response
+
+
 def get_redis_client():
-    """Повертає Redis клієнт з налаштувань Django."""
+    """
+    Повертає налаштований Redis клієнт з параметрів Django settings.
+    
+    Returns:
+        redis.Redis: Підключений Redis клієнт
+    """
     return redis.Redis(
         host=settings.REDIS_HOST,
         port=settings.REDIS_PORT,
@@ -21,6 +55,21 @@ def get_redis_client():
 
 
 def create_bin_from_data(request, data):
+    """
+    Створює новий бін з даних форми, завантажує контент у R2 та отримує унікальний хеш з Redis.
+    
+    Args:
+        request: Django HTTP request об'єкт з авторизованим користувачем
+        data (dict): Словник з даними біна (content, title, category, language, expiry, access, tags)
+    
+    Returns:
+        bool: True якщо бін успішно створено, False у разі помилки
+    
+    Notes:
+        - Завантажує контент у Cloudflare R2
+        - Отримує унікальний хеш з Redis пулу my_unique_hash_pool
+        - Повертає хеш назад у пул при помилці створення
+    """
     try:
         filename = f"bins/bin_{uuid.uuid4().hex}.txt"
         file_url = upload_to_r2(filename, data["content"])
@@ -68,6 +117,12 @@ def create_bin_from_data(request, data):
         return False
 
 def get_s3_client():
+    """
+    Створює та повертає налаштований boto3 S3 клієнт для роботи з Cloudflare R2.
+    
+    Returns:
+        boto3.client: S3-сумісний клієнт для операцій з R2
+    """
     return boto3.client(
         "s3",
         aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
@@ -76,8 +131,17 @@ def get_s3_client():
         region_name=settings.AWS_S3_REGION_NAME,
     )
 
-# Завантажує контент у Cloudflare R2 і повертає URL до файлу
 def upload_to_r2(filename, content):
+    """
+    Завантажує контент у Cloudflare R2 бакет і повертає публічний URL до файлу.
+    
+    Args:
+        filename (str): Шлях до файлу в бакеті (ключ), наприклад 'bins/bin_abc123.txt'
+        content (str): Текстовий контент для завантаження
+    
+    Returns:
+        str: Публічний HTTPS URL до завантаженого файлу
+    """
     # Підключення до R2 через boto3
     s3 = get_s3_client()
 
@@ -94,8 +158,16 @@ def upload_to_r2(filename, content):
     
     return file_url
 
-# Визначає дату видалення Bin залежно від вибраного терміну життя
 def get_expiry_map(expiry):
+    """
+    Визначає дату та час видалення біна залежно від вибраного терміну життя.
+    
+    Args:
+        expiry (str): Термін дії ('never', '1m', '1h', '12h', '1d', '1w', '2w', '30d', '6mo', '1y')
+    
+    Returns:
+        datetime or None: Час видалення або None якщо expiry='never'
+    """
     EXPIRY_MAP = {
         "never": None,
         "1m": timedelta(minutes=1),
@@ -118,8 +190,14 @@ def get_expiry_map(expiry):
 
 def get_bin_content(bin_or_file_key, default="Контент не знайдено."):
     """
-    Повертає контент біна з R2.
-    Приймає або об'єкт біна (з file_key), або сам file_key.
+    Повертає текстовий контент біна з Cloudflare R2.
+    
+    Args:
+        bin_or_file_key: Або об'єкт Create_Bins (з атрибутом file_key), або рядок file_key
+        default (str): Значення за замовчуванням при помилці завантаження
+    
+    Returns:
+        str: Текстовий контент біна або значення default
     """
     if hasattr(bin_or_file_key, "file_key"):
         file_key = bin_or_file_key.file_key
@@ -137,9 +215,16 @@ def get_bin_content(bin_or_file_key, default="Контент не знайден
         print(f"Не вдалося отримати контент з R2: {e}")
         return default
 
-    # Повертає розмір файлу (біна) у байтах з Cloudflare R2 за file_key.
 def get_bin_size(file_key):
-
+    """
+    Повертає розмір файлу (біна) у байтах з Cloudflare R2.
+    
+    Args:
+        file_key (str): Ключ файлу в R2 бакеті
+    
+    Returns:
+        int or None: Розмір файлу в байтах або None при помилці
+    """
     s3 = get_s3_client()
     try:
         obj = s3.head_object(Bucket=settings.AWS_STORAGE_BUCKET_NAME, Key=file_key)
@@ -151,7 +236,13 @@ def get_bin_size(file_key):
 
 def delete_from_r2(file_key):
     """
-    Видаляє файл з Cloudflare R2 за ключем file_key.
+    Видаляє файл з Cloudflare R2 за ключем.
+    
+    Args:
+        file_key (str): Ключ файлу для видалення
+    
+    Returns:
+        bool: True якщо видалено успішно, False при помилці
     """
     try:
         s3 = get_s3_client()
@@ -163,8 +254,16 @@ def delete_from_r2(file_key):
 
 def smart_search(query):
     """
-    Розумний пошук по назві та мові.
-    Повертає список Bin-ів, у яких схожість з запитом > 0.
+    Розумний fuzzy-пошук бінів по назві та мові за допомогою RapidFuzz.
+    
+    Args:
+        query (str): Пошуковий запит
+    
+    Returns:
+        QuerySet: Відфільтрований і відсортований QuerySet бінів із схожістю > 50%
+    
+    Notes:
+        Використовує fuzz.partial_ratio для порівняння запиту з title та language_display
     """
     if not query:
         return Create_Bins.objects.none()
@@ -192,7 +291,17 @@ def smart_search(query):
 
 def cache_bin_meta_and_content(bin, bin_content=None, ttl_meta=3600, ttl_content=3600):
     """
-    Кешує метадані та контент біна у Redis.
+    Кешує метадані та контент біна у Redis для оптимізації швидкості доступу.
+    
+    Args:
+        bin (Create_Bins): Об'єкт біна для кешування
+        bin_content (str, optional): Текстовий контент біна, якщо None - контент не кешується
+        ttl_meta (int): Час життя кешу метаданих у секундах (за замовчуванням 3600 = 1 година)
+        ttl_content (int): Час життя кешу контенту у секундах (за замовчуванням 3600 = 1 година)
+    
+    Notes:
+        Зберігає метадані як JSON у ключі bin_meta:<hash>
+        Зберігає контент у ключі bin_content:<hash>
     """
     redis_cache = get_redis_client()
     meta_key = f"bin_meta:{bin.hash}"
@@ -217,7 +326,13 @@ def cache_bin_meta_and_content(bin, bin_content=None, ttl_meta=3600, ttl_content
 
 def invalidate_bin_cache(hash):
     """
-    Видаляє кеш метаданих і контенту біна з Redis.
+    Видаляє кеш метаданих і контенту біна з Redis при оновленні або видаленні.
+    
+    Args:
+        hash (str): Хеш біна для інвалідації кешу
+    
+    Notes:
+        Видаляє обидва ключі: bin_meta:<hash> та bin_content:<hash>
     """
     redis_cache = get_redis_client()
     meta_key = f"bin_meta:{hash}"
