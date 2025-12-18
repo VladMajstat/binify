@@ -6,7 +6,6 @@
 """
 
 from django.core.management.base import BaseCommand
-from django.contrib.auth import get_user_model
 from django.utils import timezone
 from datetime import timedelta
 import uuid
@@ -15,8 +14,7 @@ import base64
 from bins.models import Create_Bins
 from bins.services import create_bin_service
 from bins.utils import get_redis_client
-
-User = get_user_model()
+from users.models import User
 
 
 class Command(BaseCommand):

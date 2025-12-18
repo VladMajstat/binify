@@ -1,9 +1,9 @@
 from django.db import models
-from django.contrib.auth import get_user_model
 from django.utils import timezone
 from django.conf import settings
 
 from .choices import CATEGORY_CHOICES, LANGUAGE_CHOICES, EXPIRY_CHOICES, ACCESS_CHOICES
+from users.models import User
 
 class Create_Bins(models.Model):
     file_url = models.URLField(blank=True, null=True, verbose_name="Посилання на файл")
@@ -41,7 +41,7 @@ class Create_Bins(models.Model):
 # Модель для збереження переглядів бінів
 class ViewBin(models.Model):
     bin = models.ForeignKey(Create_Bins, on_delete=models.CASCADE, related_name="views")  # Зв'язок з біном
-    user = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, null=True, blank=True)  # Користувач, який переглянув
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)  # Користувач, який переглянув
     ip_address = models.CharField(max_length=45, blank=True)  # IP-адреса переглядача
     viewed_at = models.DateTimeField(auto_now_add=True)  # Дата перегляду
     user_agent = models.CharField(max_length=256, blank=True)  # User-Agent браузера
@@ -53,7 +53,7 @@ class ViewBin(models.Model):
 
 class BinLike(models.Model):
     bin = models.ForeignKey(Create_Bins, on_delete=models.CASCADE, related_name="likes")
-    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     is_like = models.BooleanField(default=True)  # True=лайк, False=дизлайк
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -62,7 +62,7 @@ class BinLike(models.Model):
 
 class BinComment(models.Model):
     bin = models.ForeignKey(Create_Bins, on_delete=models.CASCADE, related_name="comments")  # звʼязок з біном
-    author = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, null=True, blank=True)  # автор коментаря
+    author = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)  # автор коментаря
     text = models.TextField(verbose_name="Текст коментаря")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата створення")
 

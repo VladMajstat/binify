@@ -28,4 +28,9 @@ urlpatterns = [
     path("api/bins/", viewsapi.PublicBinsListAPIView.as_view(), name="api_public_bins"),
     path("api/my-bins/", viewsapi.MyBinsListAPIView.as_view(), name="api_my_bins"),
     path("api/search/", viewsapi.SearchBinsAPIView.as_view(), name="api_search_bins"),
+    path("api/popular/", viewsapi.PopularBinsListAPIView.as_view(), name="api_popular_bins"),
+    
+    # Batch operations
+    path("api/bulk-delete/", viewsapi.BulkDeleteBinsAPIView.as_view(), name="api_bulk_delete_bins"),
+
 ]

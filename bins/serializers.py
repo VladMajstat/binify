@@ -1,9 +1,7 @@
 from rest_framework import serializers
-from django.contrib.auth import get_user_model
 
 from .models import Create_Bins
-
-User = get_user_model()
+from users.models import User
 
 
 class UserShortSerializer(serializers.ModelSerializer):

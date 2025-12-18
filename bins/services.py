@@ -139,7 +139,7 @@ def update_bin_service(bin_obj, user, data):
             # Інші оновлювані поля (title, tags, expiry, access, language, category)
             title = data.get("title")
             if title:
-                bin_obj.title = f"{user.username}/{title}"
+                bin_obj.title = title
 
             for field in ("tags", "expiry", "access", "language", "category"):
                 if field in data:
@@ -179,8 +179,9 @@ def get_bin_service(bin_obj, user):
 def delete_bin_service(bin_obj, user):
     """Видаляє bin: перевіряє права, видаляє з R2 та з БД, чистить кеш."""
 
-    if bin_obj.author != user:
-        raise ServiceError("Permission denied: only author can delete bin")
+    # Лише автор або адмін може видалити
+    if bin_obj.author != user and not user.is_staff:
+        raise ServiceError("Permission denied: only author or admin can delete bin")
 
     file_key = bin_obj.file_key
     bin_hash = bin_obj.hash

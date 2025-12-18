@@ -1,5 +1,5 @@
 from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.pagination import PageNumberPagination
@@ -19,6 +19,7 @@ from .services import (
 from .models import Create_Bins
 from .utils import smart_search, get_bin_content
 from .choices import CATEGORY_CHOICES, LANGUAGE_CHOICES
+from .permissions import IsAuthor, IsAuthorOrAdmin
 
 
 class CreateBinAPIView(APIView):
@@ -42,13 +43,11 @@ class CreateBinAPIView(APIView):
 
 
 class UpdateBinAPIView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthor]
 
     def put(self, request, pk):
         bin_obj = get_object_or_404(Create_Bins, pk=pk)
-        # Перевіряємо права: лише автор може оновлювати
-        if bin_obj.author != request.user:
-            return Response({"detail": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
+        self.check_object_permissions(request, bin_obj)
 
         serializer = CreateBinsSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -80,10 +79,11 @@ class GetBinAPIView(APIView):
 
 
 class DeleteBinAPIView(APIView):
-    permission_classes = [IsAuthenticated, IsAdminUser]
+    permission_classes = [IsAuthorOrAdmin]
 
     def delete(self, request, pk):
         bin_obj = get_object_or_404(Create_Bins, pk=pk)
+        self.check_object_permissions(request, bin_obj)
         try:
             delete_bin_service(bin_obj, request.user)
             return Response(status=status.HTTP_204_NO_CONTENT)
@@ -216,3 +216,103 @@ class BinRawByHashAPIView(APIView):
         content = get_bin_content(bin_obj, default="Content not found")
         
         return Response(content, content_type='text/plain', status=status.HTTP_200_OK)
+
+
+class PopularBinsListAPIView(APIView):
+    """Топ-20 популярних публічних бінів, відсортованих по лайках."""
+    permission_classes = [AllowAny]
+    
+    def get(self, request):
+        queryset = Create_Bins.objects.filter(
+            access='public').filter(
+            Q(expiry_at__isnull=True) | Q(expiry_at__gt=timezone.now())
+        ).select_related('author').order_by('-likes_count', '-created_at')[:20]
+        
+        serializer = BinListSerializer(queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class BulkDeleteBinsAPIView(APIView):
+    """Видалення кількох бінів одночасно. POST з масивом bin_ids."""
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request):
+        
+        # Отримуємо bin_ids з тіла запиту
+        try:
+            if isinstance(request.data, dict):
+                bin_ids = request.data.get('bin_ids')
+            elif isinstance(request.data, list):
+                bin_ids = request.data
+            else:
+                bin_ids = None
+            
+            # Валідація
+            if not bin_ids:
+                return Response(
+                    {"detail": "bin_ids is required and must be a non-empty list"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            if not isinstance(bin_ids, list):
+                return Response(
+                    {"detail": "bin_ids must be a list"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Конвертуємо в інтегери
+            try:
+                bin_ids = [int(bid) for bid in bin_ids]
+            except (ValueError, TypeError):
+                return Response(
+                    {"detail": "All bin_ids must be integers"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        except Exception as e:
+            return Response(
+                {"detail": f"Invalid request format: {str(e)}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        deleted_count = 0
+        skipped = []
+        errors = []
+        
+        for bin_id in bin_ids:
+            bin_obj = Create_Bins.objects.filter(pk=bin_id).first()
+
+            if not bin_obj:
+                errors.append({
+                    'bin_id': bin_id,
+                    'error': 'Bin not found'
+                })
+                continue
+
+            # Перевіряємо права: лише автор або адмін
+            if bin_obj.author != request.user and not request.user.is_staff:
+                skipped.append({
+                    'bin_id': bin_id,
+                    'reason': 'Permission denied'
+                })
+                continue
+
+            # Видаляємо через сервіс
+            try:
+                delete_bin_service(bin_obj, request.user)
+                deleted_count += 1
+            except ServiceError as e:
+                errors.append({
+                    'bin_id': bin_id,
+                    'error': str(e)
+                })
+            except Exception as e:
+                errors.append({
+                    'bin_id': bin_id,
+                    'error': str(e)
+                })
+        
+        return Response({
+            'deleted': deleted_count,
+            'skipped': skipped,
+            'errors': errors,
+            'total_requested': len(bin_ids)
+        }, status=status.HTTP_200_OK)
