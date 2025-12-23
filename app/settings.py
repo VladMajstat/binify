@@ -240,6 +240,26 @@ SIMPLE_JWT = {
 REDIS_HOST = env('REDIS_HOST', default='localhost')
 REDIS_PORT = env.int('REDIS_PORT', default=6379)
 REDIS_DB = env.int('REDIS_DB', default=0)
+# Upstash (managed Redis via REST) configuration
+# If you use Upstash, set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN in your .env
+UPSTASH_REDIS_REST_URL = env('UPSTASH_REDIS_REST_URL', default=None)
+UPSTASH_REDIS_REST_TOKEN = env('UPSTASH_REDIS_REST_TOKEN', default=None)
+
+# Optional: create a shared Upstash client instance for use in application code.
+# Note: importing the client here is safe but if you prefer lazy initialization,
+# import and instantiate `upstash_redis.Redis` where you actually use it.
+UPSTASH_REDIS_CLIENT = None
+if UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN:
+    try:
+        from upstash_redis import Redis as UpstashRedisClient
+
+        UPSTASH_REDIS_CLIENT = UpstashRedisClient(
+            url=UPSTASH_REDIS_REST_URL,
+            token=UPSTASH_REDIS_REST_TOKEN,
+        )
+    except Exception:
+        # If the package is not installed or instantiation fails, keep None
+        UPSTASH_REDIS_CLIENT = None
 # ============================================================================
 # PRODUCTION SECURITY SETTINGS
 # ============================================================================

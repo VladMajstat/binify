@@ -21,6 +21,8 @@ fly secrets set \
   AWS_STORAGE_BUCKET_NAME="binify-bucket" \
   AWS_S3_ENDPOINT_URL="https://your-account.r2.cloudflarestorage.com" \
   AWS_S3_CUSTOM_DOMAIN="binify-bucket.your-account.r2.cloudflarestorage.com" \
+  UPSTASH_REDIS_REST_URL="https://your-upstash-rest-url" \
+  UPSTASH_REDIS_REST_TOKEN="your-upstash-rest-token" \
   ALLOWED_HOSTS="$APP.fly.dev" \
   CSRF_TRUSTED_ORIGINS="https://$APP.fly.dev"
 
