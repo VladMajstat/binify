@@ -1,0 +1,22 @@
+# Dockerfile для FastAPI hash-service
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Встановлюємо залежності
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+# Копіюємо requirements
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Копіюємо проект
+COPY . .
+
+# Експортуємо порт
+EXPOSE 8000
+
+# Запускаємо FastAPI через uvicorn
+CMD ["uvicorn", "hash_generator.hash_service:app", "--host", "0.0.0.0", "--port", "8000"]

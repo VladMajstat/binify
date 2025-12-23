@@ -1,0 +1,136 @@
+version: '3.8'
+
+services:
+  # PostgreSQL база даних
+  db:
+    image: postgres:15-alpine
+    container_name: binify_db
+    environment:
+      POSTGRES_DB: binify
+      POSTGRES_USER: binify
+      POSTGRES_PASSWORD: binify
+    ports:
+      - "5432:5432"
+    volumes:
+      # Зберігаємо дані навіть після перезавантаження контейнера
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U binify"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis для кешу та очереді
+  redis:
+    image: redis:7-alpine
+    container_name: binify_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Django додаток
+  web:
+    build: .
+    container_name: binify_web
+    env_file:
+      - .env
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py collectstatic --noinput &&
+             gunicorn app.wsgi:application --bind 0.0.0.0:8000 --workers 2 --timeout 120"
+    environment:
+      DEBUG: 'False'
+      DATABASE_URL: postgres://binify:binify@db:5432/binify
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_DB: 0
+      ALLOWED_HOSTS: localhost,127.0.0.1,web
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # FastAPI hash generator сервіс
+  hash-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.hash
+    container_name: binify_hash_service
+    env_file:
+      - .env
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    ports:
+      - "8081:8000"
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/docs"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Воркер для фонових задач
+  worker:
+    build: .
+    container_name: binify_worker
+    env_file:
+      - .env
+    command: python manage.py delete_expired_bins
+    environment:
+      DEBUG: 'False'
+      DATABASE_URL: postgres://binify:binify@db:5432/binify
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      
+    volumes:
+      - .:/app
+    depends_on:
+      - db
+      - redis
+      - web
+
+  # Reverse proxy to terminate TLS and serve static files
+  # nginx:
+  #   image: nginx:stable-alpine
+  #   container_name: binify_nginx
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - ./deploy/nginx/conf.d:/etc/nginx/conf.d:ro
+  #     - ./deploy/nginx/ssl:/etc/nginx/ssl:ro
+  #     - static_volume:/app/staticfiles:ro
+  #   depends_on:
+  #     - web
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:80/healthz"]
+  #     interval: 30s
+  #     timeout: 5s
+  #     retries: 3
+
+volumes:
+  postgres_data:
+  redis_data:
+  static_volume:
+  media_volume:

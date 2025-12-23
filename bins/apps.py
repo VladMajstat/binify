@@ -6,9 +6,3 @@ class BinsConfig(AppConfig):
     name = "bins"
     verbose_name = "Створити_Bin"
 
-    def ready(self):
-        # Плануємо щоденне очищення прострочених бінів (перше спрацювання через 60 c)
-        from bins.tasks import delete_expired_bins_task
-
-        # repeat=86400 → кожні 24 години; задачі виконуються процесом `manage.py process_tasks`
-        delete_expired_bins_task(repeat=86400)

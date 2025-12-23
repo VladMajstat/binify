@@ -1,0 +1,49 @@
+# Fly.io конфігурація для деплою
+# Установи Fly CLI: https://fly.io/docs/getting-started/installing-flyctl/
+# Команда деплою: fly deploy
+
+app = "binify"  # ЗАМІНІТЬ на свою назву приложення
+primary_region = "ams"  # Amsterdam — обрай регіон поближче до тебе (ams, lhr, iad, sfo, ord, sea, sjc, yyz, cdg, sin, syd)
+
+[env]
+  DEBUG = "False"
+  REDIS_DB = "0"
+  ALLOWED_HOSTS = "binify.fly.dev"
+  # Інші змінні встанови через: fly secrets set KEY=VALUE
+
+[build]
+  builder = "docker"
+  dockerfile = "Dockerfile"
+
+[deploy]
+  release_command = "python manage.py migrate --noinput"
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 8000
+  
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+    force_https = true
+  
+  [[services.ports]]
+    port = 443
+    handlers = ["tls", "http"]
+
+  [services.concurrency]
+    type = "connections"
+    hard_limit = 100
+    soft_limit = 80
+
+  [[services.tcp_checks]]
+    grace_period = "5s"
+    interval = "15s"
+    timeout = "10s"
+
+# Для масштабування
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true

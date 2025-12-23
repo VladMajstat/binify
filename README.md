@@ -1,3 +1,73 @@
+# Binify — Pastebin Service
+
+> Django REST API з JWT авторизацією, Redis кешуванням, Cloudflare R2 сховищем та автоматичним видаленням прострочених bins.
+
+## 📚 Документація
+
+- **[SUMMARY.md](SUMMARY.md)** — підсумок підготовки до деплою (що зроблено, що готово, як використовувати)
+- **[FAQ.md](FAQ.md)** — часті питання та відповіді (налагодження, Docker, Fly.io, Redis, R2)
+- **[COMMANDS.md](COMMANDS.md)** — швидкі команди для локального та production розвитку
+- **[DEPLOY.md](DEPLOY.md)** — детальний посібник деплою на Fly.io для початківців
+- **[DOCKER.md](DOCKER.md)** — запуск проекту локально через Docker Compose
+- **[CHECKLIST.md](CHECKLIST.md)** — чек-лист готовності до production
+- **[.env.example](.env.example)** — приклад конфігурації середовища
+
+## 🚀 Quick Start (Production Deployment)
+
+**Детальний посібник для початківців:** [DEPLOY.md](DEPLOY.md)
+
+### Короткий чек-лист:
+1. ✅ **Реєстрація сервісів** (безкоштовно):
+   - [Neon.tech](https://neon.tech) — PostgreSQL база даних
+   - [Upstash.com](https://upstash.com) — Redis
+   - [Cloudflare R2](https://dash.cloudflare.com/r2) — сховище файлів
+   - [Fly.io](https://fly.io) — хостинг Django
+
+2. ✅ **Налаштування секретів** (заповни `.env` локально):
+   ```bash
+   cp .env.example .env
+   # Відредагуй .env: DATABASE_URL, REDIS_HOST, AWS_ACCESS_KEY_ID, та ін.
+   ```
+
+3. ✅ **Локальне тестування**:
+   ```bash
+   python manage.py migrate
+   python manage.py test
+   python manage.py runserver
+   ```
+
+4. ✅ **Деплой на Fly.io**:
+   ```bash
+   fly auth login
+   fly launch
+   fly secrets set DJANGO_SECRET_KEY="..." DATABASE_URL="..." REDIS_HOST="..."
+   fly deploy
+   ```
+
+5. ✅ **Перевірка**:
+   ```bash
+   fly open  # Відкрити в браузері
+   fly logs -f  # Перегляд логів
+   ```
+
+---
+
+## 🐳 Локальний запуск через Docker
+
+Детальний посібник: [DOCKER.md](DOCKER.md)
+
+```bash
+# Швидкий старт
+cp .env.example .env
+docker-compose up -d
+docker-compose exec web python manage.py migrate
+docker-compose exec web python manage.py createsuperuser
+
+# Відкрий http://localhost:8000
+```
+
+---
+
 # Ops Guide (non-API)
 
 ### Cloudflare R2 (boto3)

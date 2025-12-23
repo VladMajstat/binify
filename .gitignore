@@ -1,11 +1,61 @@
+# Python
 venv/
-.pylintrc
 __pycache__/
-cache/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
 
-.vscode
-.idea
-.env
+# Virtual environments
+ENV/
+env/
+.venv
 
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Django
 db.sqlite3
-media/
+db.sqlite3-journal
+*.log
+/media
+/staticfiles
+/static_root
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Cache
+cache/
+.pylintrc
+
+# Testing
+.coverage
+.pytest_cache/
+htmlcov/
+*.cover
+.hypothesis/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Fly.io
+fly.toml  # Якщо хочеш, щоб кожен створював свою власну конфігурацію
+# Або видали цей рядок, щоб зберегти шаблон у Git
+
+# Ignore local nginx SSL keys
+deploy/nginx/ssl/
+
+echo backups/*.dump >> .gitignore
+type .gitignore | findstr /I "backups/*.dump"

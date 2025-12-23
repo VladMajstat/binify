@@ -17,20 +17,20 @@
 <div class="container mt-4">
   <div class="row justify-content-center">
       <div class="col-md-6">
-          {% if messages %}
+            {% if messages %}
               {% for message in messages %}
-                  {% if message.tags == 'success' %}
-                  <div id="notification" class="position-fixed start-50 translate-middle-x z-3 alert alert-success fade show custom-shadow" role="alert">
-                      {{ message }}
-                  </div>
-                  {% endif %}
-                  {% if message.tags == 'warning' %}
-                  <div id="notification" class="position-fixed start-50 translate-middle-x z-3 alert alert-danger fade show custom-shadow" role="alert">
-                      {{ message }}
-                  </div>
-                  {% endif %}
+                {% comment %}Map common Django message tags to Bootstrap alert classes{% endcomment %}
+                {% if message.tags == 'success' %}
+                  <div id="notification" class="position-fixed start-50 translate-middle-x z-3 alert alert-success fade show custom-shadow" role="alert">{{ message }}</div>
+                {% elif message.tags == 'error' or message.tags == 'warning' %}
+                  <div id="notification" class="position-fixed start-50 translate-middle-x z-3 alert alert-danger fade show custom-shadow" role="alert">{{ message }}</div>
+                {% elif message.tags == 'info' %}
+                  <div id="notification" class="position-fixed start-50 translate-middle-x z-3 alert alert-info fade show custom-shadow" role="alert">{{ message }}</div>
+                {% else %}
+                  <div id="notification" class="position-fixed start-50 translate-middle-x z-3 alert alert-secondary fade show custom-shadow" role="alert">{{ message }}</div>
+                {% endif %}
               {% endfor %}
-          {% else %}
+            {% else %}
           <div id="jq-notification" class="position-fixed start-50 translate-middle-x z-3 alert alert-success fade show custom-shadow" style="display: none;" role="alert">
           </div>
           {% endif %}

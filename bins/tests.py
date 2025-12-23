@@ -68,7 +68,10 @@ class AjaxCommentTest(TestCase):
             BinComment.objects.filter(bin=self.bin, text="Тест AJAX коментар").exists()
         )
 
-redis_cache = redis.Redis(host="localhost", port=6379)
+from bins.utils import get_redis_client
+
+# Використовуємо клієнт через `get_redis_client()` — дозволяє фолбек до FakeRedis під час тестів
+redis_cache = get_redis_client()
 
 
 class BinCacheTest(TestCase):

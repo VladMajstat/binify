@@ -37,7 +37,8 @@ SECRET_KEY = env('DJANGO_SECRET_KEY', default='django-insecure-#&1uc!lbcv6!-*org
 # DEBUG також конфігурується через .env
 DEBUG = env.bool('DEBUG', True)
 
-ALLOWED_HOSTS = ['*', "localhost", "127.0.0.1",]
+# ALLOWED_HOSTS: для production обов'язково встанови через .env
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['localhost', '127.0.0.1', '*'])
 
 
 # Application definition
@@ -57,8 +58,6 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.google',
     'allauth.socialaccount.providers.github',
 
-    'background_task',
-
     'debug_toolbar',
 
     "rest_framework",
@@ -70,9 +69,12 @@ INSTALLED_APPS = [
 
 SITE_ID = env.int('SITE_ID', default=1)
 LOGIN_REDIRECT_URL = "/user/profile/"
+# LOGIN_URL = "/user/login/"
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    # WhiteNoise для production (статичні файли без необхідності nginx)
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -148,6 +150,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / 'staticfiles'  # для production (збір через collectstatic)
+
+# WhiteNoise кеширує файли (покращує production performance)
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 STATICFILES_DIRS = [
     BASE_DIR / 'static'
@@ -234,3 +240,36 @@ SIMPLE_JWT = {
 REDIS_HOST = env('REDIS_HOST', default='localhost')
 REDIS_PORT = env.int('REDIS_PORT', default=6379)
 REDIS_DB = env.int('REDIS_DB', default=0)
+# ============================================================================
+# PRODUCTION SECURITY SETTINGS
+# ============================================================================
+
+# Для production — встанови SECURE_SSL_REDIRECT = True через .env
+SECURE_SSL_REDIRECT = env.bool('SECURE_SSL_REDIRECT', False)
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# HSTS: повідомляє браузерам, що завжди звертатись через HTTPS (потім не можна вимкнути 1 рік!)
+SECURE_HSTS_SECONDS = env.int('SECURE_HSTS_SECONDS', 0)
+SECURE_HSTS_INCLUDE_SUBDOMAINS = env.bool('SECURE_HSTS_INCLUDE_SUBDOMAINS', False)
+SECURE_HSTS_PRELOAD = env.bool('SECURE_HSTS_PRELOAD', False)
+
+# Cookie security для production
+SECURE_COOKIE_SECURE = env.bool('SECURE_COOKIE_SECURE', False)
+SESSION_COOKIE_SECURE = env.bool('SESSION_COOKIE_SECURE', False)
+CSRF_COOKIE_SECURE = env.bool('CSRF_COOKIE_SECURE', False)
+
+# Виключно production-прапор: дає змогу керувати поведінкою безпеки окремо від DEBUG
+# Встановлюйте PRODUCTION=True у продакшені (наприклад через fly secrets або fly.toml env)
+PRODUCTION = env.bool('PRODUCTION', default=False)
+
+if PRODUCTION:
+    # Якщо явно production — застосовуємо більш суворі налаштування або беремо їх з оточення
+    SECURE_SSL_REDIRECT = env.bool('SECURE_SSL_REDIRECT', True)
+    SESSION_COOKIE_SECURE = env.bool('SESSION_COOKIE_SECURE', True)
+    CSRF_COOKIE_SECURE = env.bool('CSRF_COOKIE_SECURE', True)
+    SECURE_HSTS_SECONDS = env.int('SECURE_HSTS_SECONDS', 31536000)  # 1 рік
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = env.bool('SECURE_HSTS_INCLUDE_SUBDOMAINS', True)
+else:
+    # У локальній/тестовій середовищі поважаємо значення з .env або дефолти
+    SECURE_SSL_REDIRECT = env.bool('SECURE_SSL_REDIRECT', False)
+    # cookie flags залишаються у значеннях, що були встановлені вище або в .env
