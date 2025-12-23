@@ -7,7 +7,7 @@ app = 'binify-app'
 primary_region = 'ams'
 
 [deploy]
-  release_command = 'python manage.py migrate --noinput'
+#  release_command = 'python manage.py migrate --noinput'  # temporarily disabled for debugging
 
 [env]
   ALLOWED_HOSTS = 'binify.fly.dev'
