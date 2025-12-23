@@ -6,10 +6,6 @@
 app = 'binify-app'
 primary_region = 'ams'
 
-[build]
-  builder = "paketobuildpacks/builder:base"
-  dockerfile = 'Dockerfile'
-
 [deploy]
   release_command = 'python manage.py migrate --noinput'
 
@@ -21,7 +17,7 @@ primary_region = 'ams'
 [http_service]
   internal_port = 8000
   force_https = true
-  auto_stop_machines = 'stop'
+  auto_stop_machines = false
   auto_start_machines = true
 
 [[services]]
