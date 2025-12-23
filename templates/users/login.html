@@ -18,7 +18,7 @@
                     </div>
                 {% endif %}
                 <!-- Форма логіну -->
-                <form  action="{% url "user:login" %}" method="post">
+                <form  action="{% url 'users:login' %}" method="post">
                     {% csrf_token %}
                     {% if next %}
                         <input type="hidden" name="next" value="{{ next }}">
@@ -53,14 +53,14 @@
                 </div>
                 <hr>
                 <!-- Альтернативна авторизація через соцмережі -->
-                <div class="text-center">py
+                <div class="text-center">
                     <p>Або увійдіть через:</p>
                     <a href="{% provider_login_url 'google' %}" class="btn btn-dark">
-                        <img class="mx-1" src="{% static "deps/icons/google.svg" %}" alt="Catalog Icon" width="16" height="16">
+                        <img class="mx-1" src="{% static 'deps/icons/google.svg' %}" alt="Catalog Icon" width="16" height="16">
                         Google
                     </a>
                     <a href="{% provider_login_url 'github' %}" class="btn btn-dark">
-                        <img class="mx-1" src="{% static "deps/icons/github.svg" %}" alt="Catalog Icon" width="16" height="16">
+                        <img class="mx-1" src="{% static 'deps/icons/github.svg' %}" alt="Catalog Icon" width="16" height="16">
                         GitHub
                     </a>
                 </div> 
