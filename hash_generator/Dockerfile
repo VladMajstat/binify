@@ -8,7 +8,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Copy only the hash_generator package and related files from this folder
 # using the current build context. This ensures `hash_generator` is at /app/hash_generator
-COPY . /app
+## Copy package files into /app/hash_generator so `import hash_generator` works
+COPY . /app/hash_generator
 
 # Install only required packages for the hash service
 RUN pip install --no-cache-dir upstash-redis fastapi uvicorn requests
