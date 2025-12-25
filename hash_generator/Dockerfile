@@ -14,12 +14,12 @@ COPY . /app/hash_generator
 # Install only required packages for the hash service
 RUN pip install --no-cache-dir upstash-redis fastapi uvicorn requests redis
 
-# Ensure Python will look in /app for top-level modules
-ENV PYTHONPATH=/app
+# Ensure Python will look in common locations for the package (covers different build contexts)
+ENV PYTHONPATH=/app:/app/hash_generator:/app/hash_generator/hash_generator
 
 EXPOSE 8081
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
     CMD curl -f http://localhost:8081/get_hash/ || exit 1
 
-CMD ["uvicorn", "hash_generator.hash_service:app", "--host", "0.0.0.0", "--port", "8081"]
+CMD ["sh", "-c", "python -c \"import sys, importlib, os; print('PYTHONPATH:', sys.path); print('FIND_SPEC:', importlib.util.find_spec('hash_generator')); os.system('ls -la /app || true'); os.system('ls -la /app/hash_generator || true'); os.system('ls -la /app/hash_generator/hash_generator || true')\"; exec uvicorn hash_generator.hash_service:app --host 0.0.0.0 --port 8081]
