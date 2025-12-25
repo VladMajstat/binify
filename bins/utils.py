@@ -12,6 +12,7 @@ from rapidfuzz import fuzz
 from django.core.paginator import Paginator
 from rest_framework.response import Response
 from rest_framework import status
+from django.db.models import Q
 
 from .models import Create_Bins
 
@@ -48,12 +49,35 @@ def get_bin_or_error(**lookup):
 def get_redis_client():
     """
     Повертає налаштований Redis клієнт з параметрів Django settings."""
-    # Спробуємо підключитися до реального Redis; якщо не вдається — повертаємо локальний фейк.
+    # Якщо в settings заздалегідь інстанційований Upstash-клієнт — використовуємо його.
+    upstash_client = getattr(settings, "UPSTASH_REDIS_CLIENT", None)
+    if upstash_client:
+        try:
+            upstash_client.ping()
+            return upstash_client
+        except Exception:
+            logger.warning("Configured UPSTASH_REDIS_CLIENT not responding, falling back")
+
+    # Якщо в .env задані Upstash REST параметри, спробуємо створити клієнт тут.
+    if getattr(settings, "UPSTASH_REDIS_REST_URL", None) and getattr(settings, "UPSTASH_REDIS_REST_TOKEN", None):
+        try:
+            from upstash_redis import Redis as UpstashRedisClient
+
+            client = UpstashRedisClient(
+                url=settings.UPSTASH_REDIS_REST_URL,
+                token=settings.UPSTASH_REDIS_REST_TOKEN,
+            )
+            client.ping()
+            return client
+        except Exception as e:
+            logger.warning("Upstash client init failed (%s), will try standard Redis: %s", type(e).__name__, e)
+
+    # Спробуємо підключитися до звичайного Redis (host/port/db), якщо Upstash не доступний.
     try:
         client = redis.Redis(
-            host=settings.REDIS_HOST,
-            port=settings.REDIS_PORT,
-            db=settings.REDIS_DB,
+            host=getattr(settings, "REDIS_HOST", "localhost"),
+            port=getattr(settings, "REDIS_PORT", 6379),
+            db=getattr(settings, "REDIS_DB", 0),
             socket_connect_timeout=1,
         )
         # Перевірка живучості — невеликий ping
@@ -416,7 +440,8 @@ def smart_search(query):
         return Create_Bins.objects.none()
 
     query = query.lower().strip()
-    bins = Create_Bins.objects.all()
+    # exclude expired bins: either no expiry (None) or expiry in the future
+    bins = Create_Bins.objects.filter(Q(expiry_at__isnull=True) | Q(expiry_at__gt=timezone.now()))
     results = []
 
     for bin in bins:

@@ -2,6 +2,8 @@ from django.views.generic import TemplateView, ListView
 
 from django.shortcuts import render
 from django.core.paginator import Paginator
+from django.db.models import Q
+from django.utils import timezone
 
 from bins.models import Create_Bins
 from bins.utils import smart_search
@@ -16,7 +18,8 @@ class MainView(ListView):
         query = self.request.GET.get("q", None)
         if query:
             return smart_search(query)
-        return Create_Bins.objects.all().order_by("-created_at")
+        # show only non-expired bins
+        return Create_Bins.objects.filter(Q(expiry_at__isnull=True) | Q(expiry_at__gt=timezone.now())).order_by("-created_at")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -31,29 +34,6 @@ class MainView(ListView):
         )
         context["query"] = query
         return context
-
-# def main_view(request):
-#     query = request.GET.get("q", None)
-#     if query:
-#         bins_qs = smart_search(query)
-#     else:
-#         bins_qs = Create_Bins.objects.all().order_by("-created_at")
-
-#     paginator = Paginator(bins_qs, 5)  # 5 елементів на сторінку
-#     page_number = request.GET.get("page")
-#     bins_page = paginator.get_page(page_number)
-
-#     context = {
-#         "bins_page": bins_page,
-#         "title": "Binify — Головна",
-#         "content": "Легко зберігай та ділись фрагментами коду або тексту.",
-#         "create_new_bin": "Створити новий Bin",
-#         "last_bin": "Останні Bin",
-#         "0_bins": "Немає жодного біна. Будь першим!",
-#         "search_message": f'Результати пошуку для: "{query}"' if query else None,
-#         "query": query,
-#     }
-#     return render(request, "main/main.html", context)
 
 # class MainView(ListView):
 #     model = Create_Bins

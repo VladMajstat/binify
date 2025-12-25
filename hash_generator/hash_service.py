@@ -1,13 +1,21 @@
 from fastapi import FastAPI
 import base64
-import redis
+import redis as redis_py
 import threading
+import os
 import time
-
+from upstash_redis import Redis as UpstashRedis
 
 app = FastAPI()
 
-redis_client = redis.Redis(host="localhost", port=6379)
+# Instantiate redis client from env: prefer Upstash REST if provided, otherwise fall back to redis-py
+try:
+    if os.getenv("UPSTASH_REDIS_REST_URL") and os.getenv("UPSTASH_REDIS_REST_TOKEN"):
+        redis_client = UpstashRedis(url=os.getenv("UPSTASH_REDIS_REST_URL"), token=os.getenv("UPSTASH_REDIS_REST_TOKEN"))
+    else:
+        redis_client = redis_py.Redis(host=os.getenv("REDIS_HOST", "localhost"), port=int(os.getenv("REDIS_PORT", "6379")), db=int(os.getenv("REDIS_DB", "0")), password=os.getenv("REDIS_PASSWORD") or None)
+except Exception:
+    redis_client = redis_py.Redis(host="localhost", port=6379)
 
 POOL_KEY = "my_unique_hash_pool"
 LAST_ID_KEY = "last_id"
@@ -37,9 +45,14 @@ threading.Thread(target=hash_producer, daemon=True).start()
 
 @app.get("/get_hash/")
 def get_hash():
-    hash_value = r.lpop(POOL_KEY)
-    if hash_value:
-        return {"hash": hash_value.decode("utf-8")}
+    try:
+        hash_value = redis_client.lpop(POOL_KEY)
+        if hash_value:
+            if isinstance(hash_value, (bytes, bytearray)):
+                return {"hash": hash_value.decode("utf-8")}
+            return {"hash": str(hash_value)}
+    except Exception:
+        return {"error": "Redis unavailable"}
     return {"error": "No hash available"}
 
 # uvicorn hash_generator.hash_service:app --reload
