@@ -11,6 +11,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 ## Copy package files into /app/hash_generator so `import hash_generator` works
 COPY . /app/hash_generator
 
+# Normalize possible nested copy scenarios:
+# - If build context was repo root, files may have been copied as /app/hash_generator/hash_generator
+#   Move nested folder to /app/hash_generator so `import hash_generator` finds the package.
+RUN if [ -d /app/hash_generator/hash_generator ]; then \
+            mv /app/hash_generator/hash_generator /tmp/_hg && rm -rf /app/hash_generator && mv /tmp/_hg /app/hash_generator; \
+        fi
+
 # Install only required packages for the hash service
 RUN pip install --no-cache-dir upstash-redis fastapi uvicorn requests redis
 
