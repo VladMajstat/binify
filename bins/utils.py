@@ -47,11 +47,7 @@ def get_bin_or_error(**lookup):
 
 def get_redis_client():
     """
-    Повертає налаштований Redis клієнт з параметрів Django settings.
-    
-    Returns:
-        redis.Redis: Підключений Redis клієнт
-    """
+    Повертає налаштований Redis клієнт з параметрів Django settings."""
     # Спробуємо підключитися до реального Redis; якщо не вдається — повертаємо локальний фейк.
     try:
         client = redis.Redis(
@@ -123,60 +119,58 @@ def create_bin_from_data(request, data):
         content_bytes = data.get("content", "").encode("utf-8")
         size_bin = len(content_bytes)
 
-        file_url = upload_to_r2(filename, data["content"])
-        expiry_at = get_expiry_map(data["expiry"])
-        file_key = filename
-
-        bin_obj = Create_Bins.objects.create(
-            file_url=file_url,
-            file_key=file_key,
-            category=data["category"],
-            language=data["language"],
-            expiry=data["expiry"],
-            expiry_at=expiry_at,
-            access=data["access"],
-            title=f"{request.user.username}/{data['title']}",
-            tags=data["tags"],
-            author=request.user,
-            size_bin=size_bin,
-        )
-
+        # Отримуємо Redis-клієнт і хеш ДО створення об'єкта у БД.
         redis_client = get_redis_client()
+        hash_value = None
+        try:
+            hash_value = redis_client.lpop("my_unique_hash_pool")
+        except Exception as e:
+            logger.warning("Failed to lpop from Redis: %s", e)
 
-        # Отримуємо хеш напряму з Redis
-        hash_value = redis_client.lpop("my_unique_hash_pool")
+        if not hash_value:
+            logger.info("Хеш не отримано з Redis — перериваємо створення біна")
+            return False
 
-        if hash_value:
-            # Безпечне приведення значення хеша до str.
-            # У тестах redis може бути мок (MagicMock), або lpop може повернути bytes.
-            try:
-                if isinstance(hash_value, (bytes, bytearray)):
-                    hash_value_str = hash_value.decode("utf-8")
-                else:
-                    # Якщо є метод decode (наприклад, MagicMock), намагаймося викликати його,
-                    # але захопимо помилки і врешті-решт приведемо до str().
-                    try:
-                        decoded = hash_value.decode("utf-8") if hasattr(hash_value, "decode") else None
-                    except Exception:
-                        decoded = None
-                    hash_value_str = decoded if isinstance(decoded, str) else str(hash_value)
-            except Exception:
-                hash_value_str = str(hash_value)
-
-            try:
-                # ...логіка створення біна з hash_value_str...
-                bin_obj.hash = hash_value_str
-                bin_obj.save(update_fields=["hash"])
-            except Exception as e:
-                # Якщо сталася помилка — повертаємо хеш назад у пул (best-effort)
+        # Безпечне приведення значення хеша до str.
+        try:
+            if isinstance(hash_value, (bytes, bytearray)):
+                hash_value_str = hash_value.decode("utf-8")
+            else:
                 try:
-                    redis_client.lpush("my_unique_hash_pool", hash_value)
+                    decoded = hash_value.decode("utf-8") if hasattr(hash_value, "decode") else None
                 except Exception:
-                    pass
-                print("Помилка при створенні біна:", e)
-                return False
-        else:
-            print("Хеш не отримано з Redis!")
+                    decoded = None
+                hash_value_str = decoded if isinstance(decoded, str) else str(hash_value)
+        except Exception:
+            hash_value_str = str(hash_value)
+
+        # Тепер завантажуємо контент у R2 і створюємо запис у БД.
+        try:
+            file_url = upload_to_r2(filename, data["content"])
+            expiry_at = get_expiry_map(data["expiry"])
+            file_key = filename
+
+            bin_obj = Create_Bins.objects.create(
+                file_url=file_url,
+                file_key=file_key,
+                category=data["category"],
+                language=data["language"],
+                expiry=data["expiry"],
+                expiry_at=expiry_at,
+                access=data["access"],
+                title=f"{request.user.username}/{data['title']}",
+                tags=data["tags"],
+                author=request.user,
+                size_bin=size_bin,
+                hash=hash_value_str,
+            )
+        except Exception as e:
+            # Повертаємо хеш назад у пул при помилці створення (best-effort)
+            try:
+                redis_client.lpush("my_unique_hash_pool", hash_value)
+            except Exception:
+                logger.warning("Failed to return hash to Redis after error: %s", e)
+            logger.exception("Помилка при завантаженні/створенні біна: %s", e)
             return False
 
         return True
