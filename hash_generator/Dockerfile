@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY . /app/hash_generator
 
 # Install only required packages for the hash service
-RUN pip install --no-cache-dir upstash-redis fastapi uvicorn requests
+RUN pip install --no-cache-dir upstash-redis fastapi uvicorn requests redis
 
 # Ensure Python will look in /app for top-level modules
 ENV PYTHONPATH=/app
