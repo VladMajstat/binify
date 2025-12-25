@@ -1,17 +1,25 @@
 #!/usr/bin/env python3
 import sys
 import importlib
+import importlib.util
 import os
 
 def print_diagnostics():
     try:
         print('PYTHONPATH:', sys.path)
-        print('FIND_SPEC:', importlib.util.find_spec('hash_generator'))
+        try:
+            spec = importlib.util.find_spec('hash_generator')
+        except Exception as e:
+            spec = f'find_spec failed: {e}'
+        print('FIND_SPEC:', spec)
         for p in ('/app', '/app/hash_generator', '/app/hash_generator/hash_generator'):
             try:
                 print(p + ':', os.listdir(p))
             except Exception as e:
                 print(p + ': cannot list ->', e)
+        # print some env vars useful for debugging
+        for k in ('UPSTASH_REDIS_REST_URL', 'UPSTASH_REDIS_REST_TOKEN', 'REDIS_HOST'):
+            print(f'{k}={os.getenv(k)}')
     except Exception as e:
         print('diagnostics failed:', e)
 
