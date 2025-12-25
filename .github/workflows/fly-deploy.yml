@@ -9,6 +9,8 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
     steps:
       - uses: actions/checkout@v4
 
@@ -16,7 +18,8 @@ jobs:
         uses: superfly/flyctl-actions/setup-flyctl@master
         with:
           version: 'v0.0.XXX' # необов'язково
-          access-token: ${{ secrets.FLY_API_TOKEN }}
 
       - name: Deploy (remote build)
         run: fly deploy --remote-only --app binify-hash-generator
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
